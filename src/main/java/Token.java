@@ -1,3 +1,4 @@
+package src.main.java;
 
 public class Token {
     public int l, c;

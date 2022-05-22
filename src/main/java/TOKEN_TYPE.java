@@ -1,3 +1,5 @@
+package src.main.java;
+
 public enum TOKEN_TYPE {
     ADDITION,
     AND,
