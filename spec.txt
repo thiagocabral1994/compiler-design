@@ -1,0 +1,70 @@
+Tokens:
+
+  1- comandos:
+    -> data;
+    -> Int;
+    -> Char;
+    -> Bool;
+    -> Float;
+    -> if;
+    -> else;
+    -> iterate;
+    -> read;
+    -> print;
+    -> return;
+    -> new;
+
+  2 - nome de tipo:
+    -> [A-Z][a-z|A-Z|0-9|_]*
+
+  3 - literal ponto flutuante:
+    -> 40. ou 40.0 ou .4 // Float
+
+  4 - literal caractere:
+    -> '4' ou '\n' ou '\t' ou '\b' ou '\r' ou '\\' ou '\'' // Char
+
+  5 - literal inteiro:
+    -> 0|[1-9][0-9]* // Int
+
+  6 - literal lógico:
+    -> true;
+    -> false;
+
+  7 - literal nulo:
+    -> null;
+
+  8- identificador:
+    -> [a-z][a-z|A-Z|0-9|_]*
+
+  9- Operators:
+    -> == // igualdade;
+    -> != // desigualdade;
+    -> >= // maior ou igual;
+    -> <= // menor ou igual;
+    -> < // menor;
+    -> > // maior;
+    -> = // atribuição;
+    -> ! // negação;
+    -> - // subtração;
+    -> + // adição;
+    -> % // resto;
+    -> && // E condicionão;
+    -> || // OU condicional;
+
+  10- Caracteres especiais:
+    -> *
+    -> [
+    -> ]
+    -> (
+    -> )
+    -> {
+    -> }
+    -> .
+    -> ,
+    -> ;
+
+  11- Outros:
+    -> \r | \n | \r\n // Fim de linha
+    -> "//" (.)* {FimDeLinha} // Comentário de Linha
+    -> {FimDeLinha} | [ \t\f]
+    -> EOF // Fim de arquivo
