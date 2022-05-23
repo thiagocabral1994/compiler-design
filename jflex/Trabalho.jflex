@@ -1,3 +1,7 @@
+/**
+ * Daniel Augusto Machado Baeta - 201965122C
+ * Thiago do Vale Cabral - 201965220AC
+ */
 
  /*  Esta seção é copiada antes da declaração da classe do analisador léxico.
   *  É nesta seção que se deve incluir imports e declaração de pacotes.
