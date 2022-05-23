@@ -32,7 +32,49 @@ public class Token {
     
     @Override
     public String toString(){
-       return "[("+l+","+ c+ ") \"" + lexeme + "\" : <" + (info == null ? "" : info.toString()) + ">] - " + t.toString();
+      switch (t) {
+            case DATA_KEYWORD:
+                  return "DATA";
+            case INT_KEYWORD:
+                  return "INT";
+            case FLOAT_KEYWORD:
+                  return "FLOAT";
+            case CHAR_KEYWORD:
+                  return "CHAR";
+            case BOOL_KEYWORD:
+                  return "BOOL";
+            case IF_KEYWORD:
+                  return "IF";
+            case ELSE_KEYWORD:
+                  return "ELSE";
+            case ITERATE_KEYWORD:
+                  return "ITERATE";
+            case READ_KEYWORD:
+                  return "READ";
+            case PRINT_KEYWORD:
+                  return "PRINT";
+            case RETURN_KEYWORD:
+                  return "RETURN";
+            case NEW_KEYWORD:
+                  return "NEW";
+            case IDENTIFIER:
+                  return "ID:"+lexeme;
+            case TYPE:
+                  return "TYPE:"+lexeme;
+            case FLOAT_LITERAL:
+                  return "FLOAT:"+info.toString();
+            case CHAR_LITERAL:
+                  return "CHAR:"+info.toString();
+            case INT_LITERAL:
+                  return "INT:"+info.toString();
+            case BOOL_LITERAL:
+                  return "BOOL:"+info.toString();
+            case NULL_LITERAL:
+                  return "NULL";
+            default:
+                  return lexeme;
+      }
+      //  return "[("+l+","+ c+ ") \"" + lexeme + "\" : <" + (info == null ? "" : info.toString()) + ">] - " + t.toString();
     }
 }
 
