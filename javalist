@@ -54,7 +54,5 @@
 ./src/main/java/visitor/ParserVisitor.java
 ./src/main/java/visitor/Visitable.java
 ./src/main/java/Teste.java
-./src/main/java/parser/.antlr/ParserLexer.java
-./src/main/java/parser/.antlr/ParserParser.java
 ./src/main/java/parser/ParserLexer.java
 ./src/main/java/parser/ParserParser.java
