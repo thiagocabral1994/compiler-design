@@ -3,9 +3,6 @@
  * Thiago do Vale Cabral - 201965220AC
  */
 
-package main.java;
-
-import java.io.FileReader;
 import java.io.IOException;
 
 public class Teste{

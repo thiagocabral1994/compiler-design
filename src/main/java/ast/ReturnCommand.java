@@ -1,10 +1,10 @@
-package main.java.ast;
+package ast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import main.java.visitor.Visitable;
-import main.java.visitor.Visitor;
+import visitor.Visitable;
+import visitor.Visitor;
 
 public class ReturnCommand extends Command implements Visitable {
   private List<Expression> expressions;

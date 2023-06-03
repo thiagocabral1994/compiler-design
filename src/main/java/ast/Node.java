@@ -1,4 +1,4 @@
-package main.java.ast;
+package ast;
 
 public abstract class Node {
   private int line, col;

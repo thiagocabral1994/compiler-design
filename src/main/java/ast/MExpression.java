@@ -1,4 +1,4 @@
-package main.java.ast;
+package ast;
 
 public abstract class MExpression extends AExpression {
   public MExpression(int line, int col) {

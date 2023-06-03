@@ -1,4 +1,4 @@
-package main.java.ast;
+package ast;
 
 public abstract class Expression extends Node {
   public Expression(int line, int col) {

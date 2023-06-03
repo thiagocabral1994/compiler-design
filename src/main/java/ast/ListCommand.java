@@ -1,10 +1,10 @@
-package main.java.ast;
+package ast;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import main.java.visitor.Visitable;
-import main.java.visitor.Visitor;
+import visitor.Visitable;
+import visitor.Visitor;
 
 public class ListCommand extends Command implements Visitable {
   private List<Command> commands;

@@ -1,7 +1,7 @@
-package main.java.ast;
+package ast;
 
-import main.java.visitor.Visitable;
-import main.java.visitor.Visitor;
+import visitor.Visitable;
+import visitor.Visitor;
 
 public class FalseSExpression extends SExpression implements Visitable {
   public FalseSExpression(int line, int col) {

@@ -4,7 +4,7 @@ grammar Parser;
 {
     package parser;
 
-    import src.main.java.ast.*;
+    import ast.*;
 
     import java.util.List;
     import java.util.ArrayList;

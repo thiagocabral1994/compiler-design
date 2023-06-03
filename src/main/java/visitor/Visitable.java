@@ -1,4 +1,4 @@
-package main.java.visitor;
+package visitor;
 
 public interface Visitable {
   public void accept(Visitor visitor);

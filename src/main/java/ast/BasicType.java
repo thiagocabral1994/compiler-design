@@ -1,4 +1,4 @@
-package main.java.ast;
+package ast;
 
 public abstract class BasicType extends Node {
   public BasicType(int line, int col) {

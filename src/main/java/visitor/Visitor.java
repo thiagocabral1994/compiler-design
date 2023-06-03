@@ -1,6 +1,6 @@
-package main.java.visitor;
+package visitor;
 
-import main.java.ast.*;
+import ast.*;
 
 public abstract class Visitor {
   public abstract void visit(AdditionAExpression node);
