@@ -1,17 +1,11 @@
 package ast;
 
-import visitor.Visitable;
 import visitor.Visitor;
 
-public class ArrayType extends Node implements Visitable {
-  private String typeName;
-
+public class ArrayType extends Type {
   public ArrayType(int line, int col, String typeName) {
-    super(line, col);
-    this.typeName = typeName;
+    super(line, col, typeName);
   }
-
-  public String getTypeName() { return this.typeName; }
 
   public void accept(Visitor visitor) {
     visitor.visit(this);
