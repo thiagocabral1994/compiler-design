@@ -80,8 +80,8 @@ btype returns [BasicType ast]:
 ;
 
 cmd returns [Command ast]:
-    {$ast = new ListCommand();}
     OPEN_BRACE
+    {$ast = new ListCommand($OPEN_BRACE.line, $OPEN_BRACE.pos);}
     (cmd1=cmd {$ast.pushCommand(new Command($cmd1.ast.getLine(), $cmd1.ast.getCol()));})*
     CLOSE_BRACE
 |
