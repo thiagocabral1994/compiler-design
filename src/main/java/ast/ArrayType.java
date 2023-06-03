@@ -3,10 +3,10 @@ package ast;
 import visitor.Visitable;
 import visitor.Visitor;
 
-public class Type extends Node implements Visitable {
+public class ArrayType extends Node implements Visitable {
   private String typeName;
 
-  public Type(int line, int col, String typeName) {
+  public ArrayType(int line, int col, String typeName) {
     super(line, col);
     this.typeName = typeName;
   }

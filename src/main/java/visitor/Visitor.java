@@ -6,6 +6,7 @@ public abstract class Visitor {
   public abstract void visit(AdditionAExpression node);
   public abstract void visit(AndExpression node);
   public abstract void visit(ArrayLValue node);
+  public abstract void visit(ArrayType node);
   public abstract void visit(AssignmentCommand node);
   public abstract void visit(BooleanBasicType node);
   public abstract void visit(CallCommand node);

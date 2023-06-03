@@ -23,6 +23,12 @@ public class ParserVisitor extends Visitor {
   }
 
   @Override
+  public void visit(ArrayType node) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  }
+
+  @Override
   public void visit(AssignmentCommand node) {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'visit'");
@@ -255,5 +261,4 @@ public class ParserVisitor extends Visitor {
     // TODO Auto-generated method stub
     throw new UnsupportedOperationException("Unimplemented method 'visit'");
   }
-
 }

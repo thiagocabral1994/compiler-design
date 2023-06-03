@@ -23,6 +23,7 @@
 ./src/main/java/ast/BooleanBasicType.java
 ./src/main/java/ast/ListCommand.java
 ./src/main/java/ast/InequalityRExpression.java
+./src/main/java/ast/ArrayType.java
 ./src/main/java/ast/PrintCommand.java
 ./src/main/java/ast/AdditionAExpression.java
 ./src/main/java/ast/EqualityRExpression.java

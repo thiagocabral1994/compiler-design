@@ -20,7 +20,7 @@ grammar Parser;
 prog returns [Program ast]:
     {$ast = new Program(0, 0);}
     (data1=data {$ast.pushData($data1.ast);})*
-    (func1=func {$ast.pushFunc($func1.ast);})*
+    (func1=func {$ast.pushFunction($func1.ast);})*
 ;
 
 data returns [Data ast]:
@@ -62,9 +62,9 @@ params returns [List<Parameter> ast]:
 ;
 
 type returns [Type ast]:
-    type1=type OPEN_BRACKET CLOSE_BRACKET {$ast = new Type($type1.ast.getLine(), $type1.ast.getCol(), $type1.ast.getTypeName(), true);}
+    type1=type OPEN_BRACKET CLOSE_BRACKET {$ast = new ArrayType($type1.ast.getLine(), $type1.ast.getCol(), $type1.ast.getTypeName());}
 |
-    btype {$ast = new Type($btype.ast.getLine(), $btype.ast.getCol(), $btype.ast.getTypeName(), false);}
+    btype {$ast = new Type($btype.ast.getLine(), $btype.ast.getCol(), $btype.ast.getTypeName());}
 ;
 
 btype returns [BasicType ast]:
@@ -111,12 +111,12 @@ cmd returns [Command ast]:
     READ_KEYWORD
     lvalue1=lvalue
     SEMICOLON
-    {$ast = new ReadCommand($READ_KEYWORD.line, $READ_KEYWORD.pos, lvalue1.ast);}
+    {$ast = new ReadCommand($READ_KEYWORD.line, $READ_KEYWORD.pos, $lvalue1.ast);}
 |
     PRINT_KEYWORD
     exp4=exp
     SEMICOLON
-    {$ast = new PrintCommand($PRINT_KEYWORD.line, $PRINT_KEYWORD.pos, exp4.ast);}
+    {$ast = new PrintCommand($PRINT_KEYWORD.line, $PRINT_KEYWORD.pos, $exp4.ast);}
 |
     RETURN_KEYWORD
     exp5=exp
@@ -127,17 +127,17 @@ cmd returns [Command ast]:
     lvalue2=lvalue
     ASSIGNMENT
     exp7=exp
-    {$ast = new AssignCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), lvalue2.ast, exp7.ast);}
+    {$ast = new AssignCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $exp7.ast);}
 |
     IDENTIFIER
     {$ast = new CallCommand($IDENTIFIER.line, $IDENTIFIER.pos);}
     OPEN_PARENTHESIS
-    (exps {$ast.pushExpressions(exps.ast);})?
+    (exps {$ast.pushExpressions($exps.ast);})?
     CLOSE_PARENTHESIS
     (
         LESS_THAN
-        lvalue3=lvalue {$ast.pushReturnValue(lvalue3.ast);}
-        (COMMA lvalue4=lvalue {$ast.pushReturnValue(lvalue4.ast);})*
+        lvalue3=lvalue {$ast.pushReturnValue($lvalue3.ast);}
+        (COMMA lvalue4=lvalue {$ast.pushReturnValue($lvalue4.ast);})*
         GREATER_THAN
     )?
     SEMICOLON
@@ -177,44 +177,44 @@ aexp returns [AExpression ast]:
     aexp1=aexp
     ADDITION
     mexp1=mexp
-    {$ast = new AdditionAExpression(aexp1.ast.getLine(), aexp1.ast.getCol(), aexp1.ast, mexp1.ast);}
+    {$ast = new AdditionAExpression($aexp1.ast.getLine(), $aexp1.ast.getCol(), $aexp1.ast, $mexp1.ast);}
 |
     aexp2=aexp
     SUBTRACTION
     mexp2=mexp
-    {$ast = new SubtractionAExpression(aexp2.ast.getLine(), aexp2.ast.getCol(), aexp2.ast, mexp2.ast);}
+    {$ast = new SubtractionAExpression($aexp2.ast.getLine(), $aexp2.ast.getCol(), $aexp2.ast, $mexp2.ast);}
 |
     mexp3=mexp
-    {$ast = mexp3.ast;}
+    {$ast = $mexp3.ast;}
 ;
 
 mexp returns [MExpression ast]:
     mexp1=mexp
     MULTIPLICATION
     sexp1=sexp
-    {$ast = new MultiplicationMExpression(mexp1.ast.getLine(), mexp1.ast.getCol(), mexp1.ast, sexp1.ast);}
+    {$ast = new MultiplicationMExpression($mexp1.ast.getLine(), $mexp1.ast.getCol(), $mexp1.ast, $sexp1.ast);}
 |
     mexp2=mexp
     DIVISION
     sexp2=sexp
-    {$ast = new DivisionMExpression(mexp2.ast.getLine(), mexp2.ast.getCol(), mexp2.ast, sexp2.ast);}
+    {$ast = new DivisionMExpression($mexp2.ast.getLine(), $mexp2.ast.getCol(), $mexp2.ast, $sexp2.ast);}
 |
     mexp3=mexp
     MODULUS
     sexp3=sexp
-    {$ast = new ModulusMExpression(mexp3.ast.getLine(), mexp3.ast.getCol(), mexp3.ast, sexp3.ast);}
+    {$ast = new ModulusMExpression($mexp3.ast.getLine(), $mexp3.ast.getCol(), $mexp3.ast, $sexp3.ast);}
 |
-    sexp4=sexp {$ast = sexp4.ast;}
+    sexp4=sexp {$ast = $sexp4.ast;}
 ;
 
 sexp returns [SExpression ast]:
     NEGATION
     sexp1=sexp
-    {$ast = new NegationSExpression($NEGATION.line, $NEGATION.pos, sexp1.ast);}
+    {$ast = new NegationSExpression($NEGATION.line, $NEGATION.pos, $sexp1.ast);}
 |
     SUBTRACTION
     sexp2=sexp
-    {$ast = new NegativeSExpression($SUBTRACTION.line, $SUBTRACTION.pos, sexp1.ast);}
+    {$ast = new NegativeSExpression($SUBTRACTION.line, $SUBTRACTION.pos, $sexp2.ast);}
 |
     TRUE_LITERAL
     {$ast = new TrueSExpression($TRUE_LITERAL.line, $TRUE_LITERAL.pos);}
@@ -234,17 +234,17 @@ sexp returns [SExpression ast]:
     CHAR_LITERAL
     {$ast = new CharSExpression($CHAR_LITERAL.line, $CHAR_LITERAL.pos, $CHAR_LITERAL.text);}
 |
-    pexp1=pexp {$ast = pexp.ast;}
+    pexp1=pexp {$ast = $pexp1.ast;}
 ;
 
 pexp returns [PExpression ast]:
     lvalue1=lvalue
-    {$ast = lvalue1.ast;}
+    {$ast = $lvalue1.ast;}
 |
     OPEN_PARENTHESIS
     exp1=exp
     CLOSE_PARENTHESIS
-    {$ast = new ParenthesisPExpression($OPEN_PARENTHESIS.line, $OPEN_PARENTHESIS.pos, exp1.ast);}
+    {$ast = new ParenthesisPExpression($OPEN_PARENTHESIS.line, $OPEN_PARENTHESIS.pos, $exp1.ast);}
 |
     NEW_KEYWORD
     type1=type
@@ -253,43 +253,43 @@ pexp returns [PExpression ast]:
         OPEN_BRACKET
         exp2=exp
         CLOSE_BRACKET
-        {$ast.addExpression(exp2.ast);}
+        {$ast.addExpression($exp2.ast);}
     )?
 |
     IDENTIFIER
     {$ast = new CallPExpression($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text);}
     OPEN_PARENTHESIS
-    (exps1=exps {$ast.addExpressions($exps1.ast);})?
+    (exps1=exps {$ast.addParamExpressions($exps1.ast);})?
     CLOSE_PARENTHESIS
     OPEN_BRACKET
     exp3=exp
-    {$ast.addExpression($exp3.ast);}
+    {$ast.addBracketExp($exp3.ast);}
     CLOSE_BRACKET
 ;
 
 lvalue returns [LValue ast]:
     id1=IDENTIFIER
-    {$ast = new IdentifierLValue(id1.line, id1.pos, id1.text);}
+    {$ast = new IdentifierLValue($id1.line, $id1.pos, $id1.text);}
 |
     lvalue1=lvalue
     OPEN_BRACKET
     exp1=exp
     CLOSE_BRACKET
-    {$ast = new ArrayLValue($lvalue1.ast.getLine(), $lvalue1.ast.getPos(), $lvalue1.ast, $exp1.ast);}
+    {$ast = new ArrayLValue($lvalue1.ast.getLine(), $lvalue1.ast.getCol(), $lvalue1.ast, $exp1.ast);}
 |
     lvalue2=lvalue
     DOT
     id2=IDENTIFIER
-    {$ast = new ObjectLValue($lvalue2.ast.getLine(), $lvalue2.ast.getPos(), $lvalue2.ast, $id2.text);}
+    {$ast = new ObjectLValue($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $id2.text);}
 ;
 
 exps returns [List<Expression> ast]:
     {$ast = new ArrayList<Expression>();}
     exp1=exp
-    {$ast.add(exp1.ast);}
+    {$ast.add($exp1.ast);}
     (
         COMMA exp2=exp
-        {$ast.add(exp2.ast);}
+        {$ast.add($exp2.ast);}
     )*
 ;
 
