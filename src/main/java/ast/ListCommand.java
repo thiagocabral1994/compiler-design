@@ -1,7 +1,6 @@
 package ast;
 
 import java.util.List;
-import java.util.ArrayList;
 
 import visitor.Visitable;
 import visitor.Visitor;
@@ -9,12 +8,10 @@ import visitor.Visitor;
 public class ListCommand extends Command implements Visitable {
   private List<Command> commands;
 
-  public ListCommand(int line, int col) {
+  public ListCommand(int line, int col, List<Command> cmds) {
     super(line, col);
-    this.commands = new ArrayList<Command>();
+    this.commands = cmds;
   }
-
-  public void pushCommand(Command cmd) { this.commands.add(cmd); }
 
   public List<Command> getCommands() { return this.commands; }
 

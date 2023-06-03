@@ -10,13 +10,12 @@ public class CallCommand extends Command implements Visitable {
   private List<Expression> expressions;
   private List<LValue> returnLValues;
 
-  public CallCommand(int line, int col, String id) {
+  public CallCommand(int line, int col, String id, List<Expression> exps, List<LValue> lvalues) {
     super(line, col);
     this.id = id;
+    this.expressions = exps;
+    this.returnLValues = lvalues;
   }
-
-  public void pushExpressions(List<Expression> expressions) { this.expressions = expressions; }
-  public void pushReturnValue(LValue lvalue) { this.returnLValues.add(lvalue); }
 
   public String getId() { return this.id; }
   public List<Expression> getExpressions() { return this.expressions; }

@@ -1,6 +1,5 @@
 package ast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import visitor.Visitable;
@@ -9,13 +8,10 @@ import visitor.Visitor;
 public class ReturnCommand extends Command implements Visitable {
   private List<Expression> expressions;
 
-  public ReturnCommand(int line, int col, Expression exp) {
+  public ReturnCommand(int line, int col, List<Expression> exps) {
     super(line, col);
-    this.expressions = new ArrayList<Expression>();
-    this.pushReturnExpression(exp);
+    this.expressions = exps;
   }
-
-  public void pushReturnExpression(Expression exp) { this.expressions.add(exp); }
 
   public List<Expression> getReturnExpressions() { return this.expressions; }
 

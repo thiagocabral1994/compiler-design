@@ -80,10 +80,11 @@ btype returns [BasicType ast]:
 ;
 
 cmd returns [Command ast]:
+    {List<Command> cmds = new ArrayList<Command>();}
     OPEN_BRACE
-    {$ast = new ListCommand($OPEN_BRACE.line, $OPEN_BRACE.pos);}
-    (cmd1=cmd {$ast.pushCommand(new Command($cmd1.ast.getLine(), $cmd1.ast.getCol()));})*
+    (cmd1=cmd {cmds.add($cmd1.ast);})*
     CLOSE_BRACE
+    {$ast = new ListCommand($OPEN_BRACE.line, $OPEN_BRACE.pos, cmds);}
 |
     IF_KEYWORD
     OPEN_PARENTHESIS
@@ -118,29 +119,32 @@ cmd returns [Command ast]:
     SEMICOLON
     {$ast = new PrintCommand($PRINT_KEYWORD.line, $PRINT_KEYWORD.pos, $exp4.ast);}
 |
+    {List<Expression> exps = new ArrayList();}
     RETURN_KEYWORD
-    exp5=exp
-    {$ast = new ReturnCommand($RETURN_KEYWORD.line, $RETURN_KEYWORD.pos, $exp5.ast);}
-    (COMMA exp6=exp {$ast.pushReturnExpression($exp6.ast);})*
+    exp5=exp {exps.add($exp5.ast);}
+    (COMMA exp6=exp {exps.add($exp6.ast);})*
     SEMICOLON
+    {$ast = new ReturnCommand($RETURN_KEYWORD.line, $RETURN_KEYWORD.pos, exps);}
 |
     lvalue2=lvalue
     ASSIGNMENT
     exp7=exp
-    {$ast = new AssignCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $exp7.ast);}
+    {$ast = new AssignmentCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $exp7.ast);}
 |
+    {List<Expression> exps = new ArrayList<Expression>();}
+    {List<LValue> lvalues = new ArrayList<LValue>();}
     IDENTIFIER
-    {$ast = new CallCommand($IDENTIFIER.line, $IDENTIFIER.pos);}
     OPEN_PARENTHESIS
-    (exps {$ast.pushExpressions($exps.ast);})?
+    (exps {exps = $exps.ast;})?
     CLOSE_PARENTHESIS
     (
         LESS_THAN
-        lvalue3=lvalue {$ast.pushReturnValue($lvalue3.ast);}
-        (COMMA lvalue4=lvalue {$ast.pushReturnValue($lvalue4.ast);})*
+        lvalue3=lvalue {lvalues.add($lvalue3.ast);}
+        (COMMA lvalue4=lvalue {lvalues.add($lvalue4.ast);})*
         GREATER_THAN
     )?
     SEMICOLON
+    {$ast = new CallCommand($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text, exps, lvalues);}
 ;
 
 exp returns [Expression ast]:
@@ -246,25 +250,26 @@ pexp returns [PExpression ast]:
     CLOSE_PARENTHESIS
     {$ast = new ParenthesisPExpression($OPEN_PARENTHESIS.line, $OPEN_PARENTHESIS.pos, $exp1.ast);}
 |
+    {Expression exp = null;}
     NEW_KEYWORD
     type1=type
-    {$ast = new NewPExpression($NEW_KEYWORD.line, $NEW_KEYWORD.pos, $type1.ast);}
     (
         OPEN_BRACKET
         exp2=exp
         CLOSE_BRACKET
-        {$ast.addExpression($exp2.ast);}
+        {exp = $exp2.ast;}
     )?
+    {$ast = new NewPExpression($NEW_KEYWORD.line, $NEW_KEYWORD.pos, $type1.ast, exp);}
 |
+    {List<Expression> paramExps = new ArrayList<Expression>();}
     IDENTIFIER
-    {$ast = new CallPExpression($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text);}
     OPEN_PARENTHESIS
-    (exps1=exps {$ast.addParamExpressions($exps1.ast);})?
+    (exps1=exps {paramExps = $exps1.ast;})?
     CLOSE_PARENTHESIS
     OPEN_BRACKET
     exp3=exp
-    {$ast.addBracketExp($exp3.ast);}
     CLOSE_BRACKET
+    {$ast = new CallPExpression($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text, paramExps, $exp3.ast);}
 ;
 
 lvalue returns [LValue ast]:

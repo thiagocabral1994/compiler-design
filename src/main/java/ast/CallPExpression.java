@@ -10,13 +10,12 @@ public class CallPExpression extends PExpression implements Visitable {
   private List<Expression> paramExps;
   private Expression bracketExp;
 
-  public CallPExpression(int line, int col, String id) {
+  public CallPExpression(int line, int col, String id, List<Expression> paramsExps, Expression bracketExp) {
     super(line, col);
     this.id = id;
+    this.paramExps = paramsExps;
+    this.bracketExp = bracketExp;
   }
-
-  public void addParamExpressions(List<Expression> exps) { this.paramExps = exps;}
-  public void addBracketExp(Expression exp) { this.bracketExp = exp; }
 
   public List<Expression> getParamExpressions() { return this.paramExps; }
   public Expression getBracketExpression() { return this.bracketExp; }
