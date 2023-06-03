@@ -1,6 +1,5 @@
 package ast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import visitor.Visitable;
@@ -10,13 +9,11 @@ public class Data extends Node implements Visitable {
   private String id;
   private List<Parameter> declarations;
 
-  public Data(int line, int col, String id) {
+  public Data(int line, int col, String id, List<Parameter> declarations) {
     super(line, col);
     this.id = id;
-    this.declarations = new ArrayList<Parameter>();
+    this.declarations = declarations;
   }
-
-  public boolean pushDeclaration(Parameter declaration) { return this.declarations.add(declaration); }
 
   public String getId() { return this.id; }
   public List<Parameter> getDeclarations() {return this.declarations; };

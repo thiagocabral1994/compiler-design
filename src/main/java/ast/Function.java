@@ -1,6 +1,5 @@
 package ast;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import visitor.Visitable;
@@ -12,16 +11,13 @@ public class Function extends Node implements Visitable {
   private List<Command> commands;
   private List<Type> returnTypes;
 
-  public Function(int line, int col, String id) {
+  public Function(int line, int col, String id, List<Parameter> params, List<Command> cmds, List<Type> returnTypes) {
     super(line, col);
     this.id = id;
-    this.parameters = new ArrayList<Parameter>();
-    this.returnTypes = new ArrayList<Type>();
+    this.parameters = params;
+    this.commands = cmds;
+    this.returnTypes = returnTypes;
   }
-
-  public void setParameters(List<Parameter> parameters) {this.parameters = parameters;}
-  public boolean pushReturnType(Type returnType) { return this.returnTypes.add(returnType); }
-  public boolean pushCommand(Command command) { return this.commands.add(command); }
 
   public String getId() { return this.id; }
   public List<Type> getReturnTypes() {return this.returnTypes; };

@@ -18,18 +18,21 @@ grammar Parser;
 /* Regras da gramática */
 
 prog returns [Program ast]:
-    {$ast = new Program(0, 0);}
-    (data1=data {$ast.pushData($data1.ast);})*
-    (func1=func {$ast.pushFunction($func1.ast);})*
+    {List<Data> datas = new ArrayList<Data>();}
+    {List<Function> functions = new ArrayList<Function>();}
+    (data1=data {datas.add($data1.ast);})*
+    (func1=func {functions.add($func1.ast);})*
+    {$ast = new Program(0, 0, datas, functions);}
 ;
 
 data returns [Data ast]:
+    {List<Parameter> declarations = new ArrayList<Parameter>();}
     data1=DATA_KEYWORD
     id=TYPE_KEYWORD
-    {$ast = new Data($data1.line, $data1.pos, $id.text);}
     OPEN_BRACE
-    (decl1=decl {$ast.pushDeclaration($decl1.ast);})*
+    (decl1=decl {declarations.add($decl1.ast);})*
     CLOSE_BRACE
+    {$ast = new Data($data1.line, $data1.pos, $id.text, declarations);}
 ;
 
 decl returns [Parameter ast]:
@@ -41,18 +44,21 @@ decl returns [Parameter ast]:
 ;
 
 func returns [Function ast]:
+    {List<Parameter> params = new ArrayList<Parameter>();}
+    {List<Command> cmds = new ArrayList<Command>();}
+    {List<Type> returnTypes = new ArrayList<Type>();}
     id=IDENTIFIER 
-    {$ast = new Function($id.line, $id.pos, $id.text);}
     OPEN_PARENTHESIS 
-    (params {$ast.setParameters($params.ast);})? 
+    (params {params = $params.ast;})? 
     CLOSE_PARENTHESIS 
     (
-        COLON returnType1=type {$ast.pushReturnType($returnType1.ast);} 
-        (COMMA returnType2=type {$ast.pushReturnType($returnType2.ast);})*
+        COLON returnType1=type {returnTypes.add($returnType1.ast);} 
+        (COMMA returnType2=type {returnTypes.add($returnType2.ast);})*
     )?
     OPEN_BRACE
-    (cmd {$ast.pushCommand($cmd.ast);})?
+    (cmd {cmds.add($cmd.ast);})?
     CLOSE_BRACE
+    {$ast = new Function($id.line, $id.pos, $id.text, params, cmds, returnTypes);}
 ;
 
 params returns [List<Parameter> ast]:
@@ -129,6 +135,7 @@ cmd returns [Command ast]:
     lvalue2=lvalue
     ASSIGNMENT
     exp7=exp
+    SEMICOLON
     {$ast = new AssignmentCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $exp7.ast);}
 |
     {List<Expression> exps = new ArrayList<Expression>();}

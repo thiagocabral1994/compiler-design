@@ -5,3 +5,5 @@ ParserLexer.interp
 ParserLexer.java
 ParserLexer.tokens
 ParserParser.java
+
+*.class
