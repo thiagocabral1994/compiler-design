@@ -1,5 +1,6 @@
 package visitor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -12,7 +13,7 @@ public class InterpretVisitor extends Visitor {
 
   private Stack<HashMap<String, Object>> env;
   private HashMap<String, Function> functions;
-  private HashMap<String, Data> datas;
+  private HashMap<String, List<String>> datas;
   private Stack<Object> operands;
   private boolean returnMode, debug;
 
@@ -59,9 +60,13 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ArrayLValue node) {
-    // TODO Auto-generated method stub
-    System.out.println("ArrayLValue");
+  public void visit(ArrayLValue lvalue) {
+    try {
+      lvalue.getLValue().accept(this);
+      lvalue.getExpression().accept(this);
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
@@ -74,7 +79,15 @@ public class InterpretVisitor extends Visitor {
       Expression exp = cmd.getExpression();
       exp.accept(this);
       Object value = operands.pop();
-      // TODO
+
+      String headID = LValueTracker.getHeadID(lvalue);
+      Object variable = env.peek().get(headID);
+      if (variable == null) {
+        throw new RuntimeException(
+            " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") Variável não existe" + headID);
+      }
+      // Object newVariable = LValueTracker.assignValue(lvalue, variable, value);
+      // env.peek().put(headID, newVariable);
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
     }
@@ -115,9 +128,14 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(Data node) {
-    // TODO Auto-generated method stub
-    System.out.println("Data");
+  public void visit(Data data) {
+    String id = data.getId();
+    List<Parameter> declarations = data.getDeclarations();
+    List<String> declarationIds = new ArrayList<String>();
+    for (Parameter declaration : declarations) {
+      declarationIds.add(declaration.getId());
+    }
+    datas.put(id, declarationIds);
   }
 
   @Override
@@ -194,10 +212,7 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(IdentifierLValue node) {
-    // TODO Auto-generated method stub
-    System.out.println("IdentifierLValue");
-  }
+  public void visit(IdentifierLValue lvalue) { /* Ignora */ }
 
   @Override
   public void visit(IfCommand cmd) {
@@ -281,6 +296,9 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(ListCommand node) {
     for (Command cmd : node.getCommands()) {
+      if (this.returnMode) {
+        return;
+      }
       cmd.accept(this);
     }
   }
@@ -341,9 +359,12 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ObjectLValue node) {
-    // TODO Auto-generated method stub
-    System.out.println("ObjectLValue");
+  public void visit(ObjectLValue lvalue) {
+    try {
+      lvalue.getLValue().accept(this);
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
@@ -364,7 +385,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(Program program) {
     Function main = null;
     for(Data data : program.getDatas()) {
-      datas.put(data.getId(), data);
+      data.accept(this);
     }
 
     for(Function function : program.getFunctions()) {
