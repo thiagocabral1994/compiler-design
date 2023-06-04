@@ -377,8 +377,12 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(PrintCommand cmd) {
-    // TODO Auto-generated method stub
-    System.out.println("PrintCommand");
+    try {
+      cmd.getExpression().accept(this);
+      System.out.print(this.operands.pop());
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
