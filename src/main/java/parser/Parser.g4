@@ -70,7 +70,7 @@ params returns [List<Parameter> ast]:
 type returns [Type ast]:
     type1=type OPEN_BRACKET CLOSE_BRACKET {$ast = new ArrayType($type1.ast.getLine(), $type1.ast.getCol(), $type1.ast.getTypeName());}
 |
-    btype {$ast = new Type($btype.ast.getLine(), $btype.ast.getCol(), $btype.ast.getTypeName());}
+    btype1=btype {$ast = $btype1.ast;}
 ;
 
 btype returns [BasicType ast]:

@@ -1,30 +1,61 @@
 package visitor;
 
-import util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Stack;
+
 import ast.*;
+import util.*;
 
 public class InterpretVisitor extends Visitor {
-  private ScopeTable scopes;
-  private int level;
+  private static final String MAIN = "main";
+
+  private Stack<HashMap<String, Object>> env;
+  private HashMap<String, Function> functions;
+  private HashMap<String, Data> datas;
+  private Stack<Object> operands;
+  private boolean returnMode, debug;
 
   public InterpretVisitor() {
-    this.scopes = new ScopeTable();
-    this.level = scopes.getLevel();
+    this.env = new Stack<HashMap<String, Object>>();
+    this.env.push(new HashMap<String, Object>());
+    this.functions = new HashMap<String, Function>();
+    this.operands = new Stack<Object>();
+    this.returnMode = false;
+    this.debug = false;
   }
 
-  public int getLevel() { return this.level; }
-
-  @Override
-  public void visit(AdditionAExpression node) {
-    
-    // TODO Auto-generated method stub
-    System.out.println("AdditionAExpression");
+  public InterpretVisitor(boolean debug) {
+    super();
+    this.debug = debug;
   }
 
   @Override
-  public void visit(AndExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("AndExpression");
+  public void visit(AdditionAExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(SumOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
+  }
+
+  @Override
+  public void visit(AndExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(AndOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
@@ -34,22 +65,23 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ArrayType node) {
-    // TODO Auto-generated method stub
-    System.out.println("ArrayType");
+  public void visit(ArrayType node) { /* Ignora */ }
+
+  @Override
+  public void visit(AssignmentCommand cmd) {
+    try {
+      LValue lvalue = cmd.getLValue();
+      Expression exp = cmd.getExpression();
+      exp.accept(this);
+      Object value = operands.pop();
+      // TODO
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
-  public void visit(AssignmentCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("AssignmentCommand");
-  }
-
-  @Override
-  public void visit(BooleanBasicType node) {
-    // TODO Auto-generated method stub
-    System.out.println("BooleanBasicType");
-  }
+  public void visit(BooleanBasicType node) { /* Ignora */}
 
   @Override
   public void visit(CallCommand node) {
@@ -64,21 +96,22 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(CharSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("CharSExpression");
+  public void visit(CharSExpression exp) {
+    try {
+      operands.push(Character.valueOf(exp.getValue()));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
-  public void visit(CharacterBasicType node) {
-    // TODO Auto-generated method stub
-    System.out.println("CharacterBasicType");
-  }
+  public void visit(CharacterBasicType node) { /* Ignora */ }
 
   @Override
-  public void visit(CustomBasicType node) {
-    // TODO Auto-generated method stub
-    System.out.println("CustomBasicType");
+  public void visit(CustomBasicType type) {
+    if (datas.get(type.getTypeName()) == null) {
+      throw new RuntimeException(" (" + type.getLine() + ", " + type.getCol() + ") " + type.getTypeName() + " não existe!" );
+    }
   }
 
   @Override
@@ -88,39 +121,76 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(DivisionMExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("DivisionMExpression");
+  public void visit(DivisionMExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(DivOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(EqualityRExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("EqualityRExpression");
+  public void visit(EqualityRExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(EqualOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(FalseSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("FalseSExpression");
+  public void visit(FalseSExpression exp) {
+    try {
+      operands.push(Boolean.valueOf(false));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
-  public void visit(FloatBasicType node) {
-    // TODO Auto-generated method stub
-    System.out.println("FloatBasicType");
+  public void visit(FloatBasicType node) { /* Ignora */}
+
+  @Override
+  public void visit(FloatSExpression exp) {
+    try {
+      operands.push(Float.valueOf(exp.getValue()));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
-  public void visit(FloatSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("FloatSExpression");
-  }
+  public void visit(Function function) {
+    HashMap<String, Object> functionEnv = new HashMap<String, Object>();
+    List<Parameter> params = function.getParameters();
+    for(int i = params.size() - 1; i >= 0; i--) {
+      functionEnv.put(params.get(i).getId(), operands.pop());
+    }
+    env.push(functionEnv);
+    for (Command cmd : function.getCommands()) {
+      cmd.accept(this);
+    }
 
-  @Override
-  public void visit(Function node) {
-    // TODO Auto-generated method stub
-    System.out.println("Function");
+    if(this.debug && function.getId().equals(MAIN)) {
+      Object[] x = env.peek().keySet().toArray();
+      System.out.println("-------------- Memória ----------------");
+      for (int i = 0; i < x.length; i++) {
+        System.out.println(((String)x[i]) + " : " + env.peek().get(x[i]).toString());
+      }
+    }
+
+    env.pop();
+    this.returnMode = false;
   }
 
   @Override
@@ -130,63 +200,117 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(IfCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("IfCommand");
+  public void visit(IfCommand cmd) {
+    try {
+      cmd.getExpression().accept(this);
+      if ((Boolean) operands.pop()) {
+        cmd.getCommand().accept(this);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(IfElseCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("IfElseCommand");
+  public void visit(IfElseCommand cmd) {
+    try {
+      cmd.getExpression().accept(this);
+      if ((Boolean) operands.pop()) {
+        cmd.getIfCommand();
+      } else {
+        cmd.getElseCommand();
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(InequalityRExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("InequalityRExpression");
+  public void visit(InequalityRExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(!EqualOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(IntegerBasicType node) {
-    // TODO Auto-generated method stub
-    System.out.println("IntegerBasicType");
+  public void visit(IntegerBasicType node) { /* Ignora */}
+
+  @Override
+  public void visit(IntegerSExpression exp) {
+    try {
+      operands.push(Integer.valueOf(exp.getValue()));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
-  public void visit(IntegerSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("IntegerSExpression");
+  public void visit(IterateCommand cmd) {
+    try {
+      cmd.getExpression().accept(this);
+      while ((Boolean) operands.pop()) {
+        cmd.getCommand().accept(this);
+        cmd.getExpression().accept(this);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(IterateCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("IterateCommand");
-  }
-
-  @Override
-  public void visit(LessRExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("LessRExpression");
+  public void visit(LessRExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(LessOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
   public void visit(ListCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("ListCommand");
+    for (Command cmd : node.getCommands()) {
+      cmd.accept(this);
+    }
   }
 
   @Override
-  public void visit(ModulusMExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("ModulusMExpression");
+  public void visit(ModulusMExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(ModOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(MultiplicationMExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("MultiplicationMExpression");
+  public void visit(MultiplicationMExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(MultOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
@@ -208,9 +332,12 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(NullSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("NullSExpression");
+  public void visit(NullSExpression exp) {
+    try {
+      operands.push(null);
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
@@ -220,26 +347,37 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(Parameter node) {
-    // TODO Auto-generated method stub
-    System.out.println("Parameter");
+  public void visit(Parameter node) { /* Ignora */ }
+
+  @Override
+  public void visit(ParenthesisPExpression exp) {
+    exp.accept(this);
   }
 
   @Override
-  public void visit(ParenthesisPExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("ParenthesisPExpression");
-  }
-
-  @Override
-  public void visit(PrintCommand node) {
+  public void visit(PrintCommand cmd) {
     // TODO Auto-generated method stub
     System.out.println("PrintCommand");
   }
 
   @Override
-  public void visit(Program node) {
+  public void visit(Program program) {
+    Function main = null;
+    for(Data data : program.getDatas()) {
+      datas.put(data.getId(), data);
+    }
+
+    for(Function function : program.getFunctions()) {
+      functions.put(function.getId(), function);
+      if (function.getId().equals(MAIN)) {
+        main = function; 
+      }
+    }
     
+    if (main == null) {
+      throw new RuntimeException("Não há uma função chamada `main`!");
+    }
+    main.accept(this);
   }
 
   @Override
@@ -249,26 +387,33 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ReturnCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("ReturnCommand");
+  public void visit(ReturnCommand cmd) {
+    for (Expression exp : cmd.getReturnExpressions()) {
+      exp.accept(this);
+    }
+    this.returnMode = true;
   }
 
   @Override
-  public void visit(SubtractionAExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("SubtractionAExpression");
+  public void visit(SubtractionAExpression exp) {
+    try {
+      exp.getLeft().accept(this);
+      exp.getRight().accept(this);
+      Object left, right;
+      left = operands.pop();
+      right = operands.pop();
+      operands.push(SubOperator.execute(left, right));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(TrueSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("TrueSExpression");
-  }
-
-  @Override
-  public void visit(Type node) {
-    // TODO Auto-generated method stub
-    System.out.println("Type");
+  public void visit(TrueSExpression exp) {
+    try {
+      operands.push(Boolean.valueOf(true));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 }

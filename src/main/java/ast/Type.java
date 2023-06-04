@@ -1,9 +1,6 @@
 package ast;
 
-import visitor.Visitable;
-import visitor.Visitor;
-
-public class Type extends Node implements Visitable {
+public abstract class Type extends Node {
   private String typeName;
 
   public Type(int line, int col, String typeName) {
@@ -12,8 +9,4 @@ public class Type extends Node implements Visitable {
   }
 
   public String getTypeName() { return this.typeName; }
-
-  public void accept(Visitor visitor) {
-    visitor.visit(this);
-  }
 }

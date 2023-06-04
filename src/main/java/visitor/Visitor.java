@@ -45,5 +45,4 @@ public abstract class Visitor {
   public abstract void visit(ReturnCommand node);
   public abstract void visit(SubtractionAExpression node);
   public abstract void visit(TrueSExpression node);
-  public abstract void visit(Type node);
 }
