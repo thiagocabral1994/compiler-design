@@ -1,5 +1,6 @@
 package visitor;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ public class InterpretVisitor extends Visitor {
   private HashMap<String, Function> functions;
   private HashMap<String, List<String>> datas;
   private Stack<Object> operands;
+  private Stack<Object> lValueTrace;
   private boolean returnMode, debug;
 
   public InterpretVisitor() {
@@ -22,6 +24,7 @@ public class InterpretVisitor extends Visitor {
     this.env.push(new HashMap<String, Object>());
     this.functions = new HashMap<String, Function>();
     this.operands = new Stack<Object>();
+    this.lValueTrace = new Stack<Object>();
     this.returnMode = false;
     this.debug = false;
   }
@@ -62,8 +65,9 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(ArrayLValue lvalue) {
     try {
-      lvalue.getLValue().accept(this);
       lvalue.getExpression().accept(this);
+      lValueTrace.push(this.operands.pop());
+      lvalue.getLValue().accept(this);
     } catch (Exception e) {
       throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage() );
     }
@@ -74,20 +78,12 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(AssignmentCommand cmd) {
+    //TODO
     try {
-      LValue lvalue = cmd.getLValue();
-      Expression exp = cmd.getExpression();
-      exp.accept(this);
+      cmd.getExpression().accept(this);
       Object value = operands.pop();
-
-      String headID = LValueTracker.getHeadID(lvalue);
-      Object variable = env.peek().get(headID);
-      if (variable == null) {
-        throw new RuntimeException(
-            " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") Variável não existe" + headID);
-      }
-      // Object newVariable = LValueTracker.assignValue(lvalue, variable, value);
-      // env.peek().put(headID, newVariable);
+      LValue lvalue = cmd.getLValue();
+      lvalue.accept(this);
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
     }
@@ -97,9 +93,24 @@ public class InterpretVisitor extends Visitor {
   public void visit(BooleanBasicType node) { /* Ignora */}
 
   @Override
-  public void visit(CallCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("CallCommand");
+  public void visit(CallCommand cmd) {
+    try {
+      Function function = functions.get(cmd.getId());
+      if (function == null) {
+        throw new RuntimeException(
+            " (" + cmd.getLine() + ", " + cmd.getCol() + ") Função " + cmd.getId() + " não existe!");
+      }
+
+      for (Expression exp : cmd.getExpressions()) {
+        exp.accept(this);
+      }
+      function.accept(this);
+      for (int i = cmd.getReturnLValues().size() - 1; i >= 0; i--) {
+        cmd.getReturnLValues().get(i).accept(this); // Ta certo?
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
@@ -212,7 +223,36 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(IdentifierLValue lvalue) { /* Ignora */ }
+  public void visit(IdentifierLValue lvalue) {
+    try {
+      this.lValueTrace.push(lvalue.getID());
+      Object variable = this.env.peek().get(lvalue.getID());
+
+      while (!this.lValueTrace.empty()) {
+        Object id = this.lValueTrace.pop();
+        try {
+          if (variable != null && id instanceof String) {
+            Field field = variable.getClass().getDeclaredField((String) id);
+            field.setAccessible(true);
+            variable = field.get(variable);
+          } else if (variable.getClass().isArray() && id instanceof Integer) {
+            Object[] list = ((Object[]) variable);
+            variable = list[((Integer) id).intValue()];
+          } else {
+            throw new RuntimeException(
+                " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + id + " não é um campo válido");
+          }
+        } catch (Exception e) {
+          throw new RuntimeException(
+              " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + id + " não é um campo válido");
+        }
+      }
+
+      this.operands.push(variable);
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage());
+    }
+  }
 
   @Override
   public void visit(IfCommand cmd) {
@@ -332,21 +372,47 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(NegationSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("NegationSExpression");
+  public void visit(NegationSExpression exp) {
+    try {
+      exp.getSExpression().accept(this);
+      operands.push(NotOperator.execute(this.operands.pop()));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(NegativeSExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("NegativeSExpression");
+  public void visit(NegativeSExpression exp) {
+    try {
+      exp.getSExpression().accept(this);
+      operands.push(NegOperator.execute(this.operands.pop()));
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
-  public void visit(NewPExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("NewPExpression");
+  public void visit(NewPExpression exp) {
+    try {
+      String typeName = exp.getType().getTypeName();
+      Expression arrayExp = exp.getExpression();
+
+      Object newData = null;
+      if (arrayExp != null) {
+        arrayExp.accept(this);
+        Object size = this.operands.pop();
+        if (size instanceof Integer) {
+          newData = new Object[((Integer) size).intValue()];
+        } else {
+          throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") Erro ao criar nova instância de " + typeName );
+        }
+      } else {
+        newData = new Object();
+      }
+      this.operands.push(newData);
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
@@ -361,6 +427,7 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(ObjectLValue lvalue) {
     try {
+      this.lValueTrace.push(lvalue.getParamID());
       lvalue.getLValue().accept(this);
     } catch (Exception e) {
       throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage() );
@@ -379,7 +446,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(PrintCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      System.out.print(this.operands.pop());
+      System.out.println(this.operands.pop());
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
     }
@@ -406,9 +473,14 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ReadCommand node) {
-    // TODO Auto-generated method stub
-    System.out.println("ReadCommand");
+  public void visit(ReadCommand cmd) {
+    try {
+      cmd.getLValue().accept(this);
+      System.out.print(this.operands.pop());
+      //TODO
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
+    }
   }
 
   @Override
