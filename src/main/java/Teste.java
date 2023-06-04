@@ -23,6 +23,6 @@ public class Teste{
           ParserParser parser = new ParserParser(tokens);
 
           Program tree = parser.prog().ast;
-          tree.accept(new ParserVisitor());
+          tree.accept(new InterpretVisitor());
      }
 }

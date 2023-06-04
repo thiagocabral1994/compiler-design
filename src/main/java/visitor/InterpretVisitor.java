@@ -3,11 +3,11 @@ package visitor;
 import util.*;
 import ast.*;
 
-public class ParserVisitor extends Visitor {
+public class InterpretVisitor extends Visitor {
   private ScopeTable scopes;
   private int level;
 
-  public ParserVisitor() {
+  public InterpretVisitor() {
     this.scopes = new ScopeTable();
     this.level = scopes.getLevel();
   }
@@ -16,6 +16,7 @@ public class ParserVisitor extends Visitor {
 
   @Override
   public void visit(AdditionAExpression node) {
+    
     // TODO Auto-generated method stub
     System.out.println("AdditionAExpression");
   }
@@ -238,8 +239,7 @@ public class ParserVisitor extends Visitor {
 
   @Override
   public void visit(Program node) {
-    // TODO Auto-generated method stub
-    System.out.println("Program");
+    
   }
 
   @Override
