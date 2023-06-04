@@ -12,6 +12,7 @@ run: compile
 	java -cp antlr-4.8-complete.jar:src/main/java Teste sample.txt
 
 clean: 
+	rm -fr src/main/java/parser/.antlr
 	rm -f src/main/java/parser/ParserParser.java
 	rm -f src/main/java/parser/ParserLexer.java
 	rm -f src/main/java/parser/Parser.tokens
