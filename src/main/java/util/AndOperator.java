@@ -2,7 +2,9 @@ package util;
 
 public class AndOperator {
   public static Object execute(Object left, Object right) {
-    // TODO: Adicionar cast de tipos válidos.
+    if(left instanceof Boolean && right instanceof Boolean) {
+      return AndOperator.execute((Boolean) left, (Boolean) right);
+    }
     throw new RuntimeException("`E` lógico inválido: " + left.toString() + ", " + right.toString());
   }
 
@@ -10,5 +12,4 @@ public class AndOperator {
     return Boolean.valueOf(left.booleanValue() && right.booleanValue());
   }
 
-  // TODO: adicionar o resto de execuções válidas para soma.
 }
