@@ -73,7 +73,7 @@ type returns [Type ast]:
     btype1=btype {$ast = $btype1.ast;}
 ;
 
-btype returns [BasicType ast]:
+btype returns [Type ast]:
     INT_KEYWORD {$ast = new IntegerBasicType($INT_KEYWORD.line, $INT_KEYWORD.pos);}
 |
     CHAR_KEYWORD {$ast = new CharacterBasicType($CHAR_KEYWORD.line, $CHAR_KEYWORD.pos);}

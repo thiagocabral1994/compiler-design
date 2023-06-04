@@ -3,12 +3,10 @@ package ast;
 import visitor.Visitable;
 import visitor.Visitor;
 
-public class IntegerBasicType extends BasicType implements Visitable {
+public class IntegerBasicType extends Type implements Visitable {
   public IntegerBasicType(int line, int col) {
-    super(line, col);
+    super(line, col, "Int");
   }
-
-  public String getTypeName() { return "Int"; }
 
   public void accept(Visitor visitor) {
     visitor.visit(this);
