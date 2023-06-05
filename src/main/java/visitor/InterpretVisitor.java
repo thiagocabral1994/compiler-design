@@ -22,6 +22,7 @@ public class InterpretVisitor extends Visitor {
   public InterpretVisitor() {
     this.env = new Stack<HashMap<String, Operand>>();
     this.env.push(new HashMap<String, Operand>());
+    this.datas = new HashMap<String, List<String>>();
     this.functions = new HashMap<String, Function>();
     this.operands = new Stack<Operand>();
     this.lValueTrace = new Stack<String>();
@@ -30,7 +31,7 @@ public class InterpretVisitor extends Visitor {
   }
 
   public InterpretVisitor(boolean debug) {
-    super();
+    this();
     this.debug = debug;
   }
 
@@ -39,10 +40,10 @@ public class InterpretVisitor extends Visitor {
     try {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
-      Object left, right;
+      Operand left, right;
       left = operands.pop();
       right = operands.pop();
-      Operand result = new Operand(SumOperator.execute(left, right));
+      Operand result = new Operand(SumOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
@@ -82,11 +83,18 @@ public class InterpretVisitor extends Visitor {
   public void visit(AssignmentCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      Object value = operands.pop().getValue();
+      Operand value = operands.pop();
 
-      cmd.getLValue().accept(this);
+      LValue lvalue = cmd.getLValue();
+      lvalue.accept(this);
       Operand attrObj = this.operands.pop();
-      attrObj.setValue(value);
+      if (
+        attrObj.getValue() == null && this.env.peek().get(lvalue.getHeadId()) == null
+        ) {
+          this.env.peek().put(lvalue.getHeadId(), value);
+      } else {
+        attrObj.setValue(value.getValue());
+      }
 
       // Adicionando o resultado da atribuição
       this.operands.push(attrObj);
@@ -101,7 +109,7 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(CallCommand cmd) {
     try {
-      Function function = functions.get(cmd.getId());
+      Function function = this.functions.get(cmd.getId());
       if (function == null) {
         throw new RuntimeException(
             " (" + cmd.getLine() + ", " + cmd.getCol() + ") Função " + cmd.getId() + " não existe!");
@@ -142,22 +150,21 @@ public class InterpretVisitor extends Visitor {
       }
       function.accept(this);
 
-      exp.getBracketExpression().accept(this);;
+      exp.getBracketExpression().accept(this);
       Object returnIndex = this.operands.pop().getValue();
       
       if (!(returnIndex instanceof Integer)) {
         throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") Índice de retorno deve ser um inteiro" );
       }
 
-      Stack<Operand> returnValues = new Stack<Operand>();
-      for (int i = function.getReturnTypes().size() - 1; i >= (Integer) returnIndex; i--) {
+      for (int i = function.getReturnTypes().size() - 1; i > (Integer) returnIndex; i--) {
         /**
          * Retiramos todos os valores indesejados. Ex:
          * [1, 2, 3, 4 ,5].
          * 
          * Se queremos o índice `3`, então fazemos pop de `4` e `5`.
          */
-        returnValues.push(this.operands.pop());
+        this.operands.pop();
       }
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
@@ -253,7 +260,7 @@ public class InterpretVisitor extends Visitor {
     HashMap<String, Operand> functionEnv = new HashMap<String, Operand>();
     List<Parameter> params = function.getParameters();
     for(int i = params.size() - 1; i >= 0; i--) {
-      Operand newObject = new Operand(operands.pop());
+      Operand newObject = operands.pop();
       functionEnv.put(params.get(i).getId(), newObject);
     }
     env.push(functionEnv);
@@ -265,7 +272,7 @@ public class InterpretVisitor extends Visitor {
       Object[] x = env.peek().keySet().toArray();
       System.out.println("-------------- Memória ----------------");
       for (int i = 0; i < x.length; i++) {
-        System.out.println(((String)x[i]) + " : " + env.peek().get(x[i]).toString());
+        System.out.println(((String)x[i]) + " : " + env.peek().get(x[i]).getValue().toString());
       }
     }
 
@@ -279,8 +286,7 @@ public class InterpretVisitor extends Visitor {
       Operand variable = this.env.peek().get(lvalue.getID());
       while (!this.lValueTrace.empty()) {
         String id = this.lValueTrace.pop();
-        // Caso 1: Objeto é um mapa para outros objetos.
-        if (variable.getValue() instanceof HashMap) {
+        if (variable != null && variable.getValue() instanceof HashMap) {
           HashMap<?,?> map = (HashMap<?,?>) variable.getValue();
           variable = (Operand) map.get(id);
         } else {
@@ -289,11 +295,15 @@ public class InterpretVisitor extends Visitor {
         }
       }
 
-      if (!(variable.getValue() instanceof HashMap)) {
+      if (variable != null && variable.getValue() instanceof HashMap) {
           throw new RuntimeException(
               " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + lvalue.getID() + " não é um campo válido");
       }
 
+      if (variable == null) {
+        this.operands.push(new Operand(null));
+        return;
+      }
       this.operands.push(variable);
     } catch (Exception e) {
       throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage());
@@ -455,16 +465,24 @@ public class InterpretVisitor extends Visitor {
         arrayIndexExp.accept(this);
         Object size = this.operands.pop();
         if (size instanceof Integer) {
-          HashMap<String, Operand> newMap = new HashMap<>();
+          HashMap<String, HashMap<String, Operand>> newMap = new HashMap<>();
           for (int i = 0; i < (Integer) size; i++) {
-            newMap.put(Integer.valueOf(i).toString(), null);
+            HashMap<String, Operand> subMap = new HashMap<>();
+            for (String argName : this.datas.get(typeName)) {
+              subMap.put(argName, null);
+            }
+            newMap.put(Integer.valueOf(i).toString(), subMap);
           }
           newData = newMap;
         } else {
           throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") Erro ao criar nova instância de " + typeName );
         }
       } else {
-        newData = new Object();
+        HashMap<String, Operand> objMap = new HashMap<String, Operand>();
+        for (String argName : this.datas.get(typeName)) {
+          objMap.put(argName, null);
+        }
+        newData = objMap;
       }
       Operand result = new Operand(newData);
       operands.push(result);
@@ -497,14 +515,14 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(ParenthesisPExpression exp) {
-    exp.accept(this);
+    exp.getExpression().accept(this);
   }
 
   @Override
   public void visit(PrintCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      System.out.println(this.operands.pop());
+      System.out.println(this.operands.pop().getValue());
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
     }
@@ -518,7 +536,7 @@ public class InterpretVisitor extends Visitor {
     }
 
     for(Function function : program.getFunctions()) {
-      functions.put(function.getId(), function);
+      this.functions.put(function.getId(), function);
       if (function.getId().equals(MAIN)) {
         main = function; 
       }

@@ -12,6 +12,7 @@ public class IdentifierLValue extends LValue implements Visitable {
   }
 
   public String getID() { return this.id; }
+  public String getHeadId() { return this.getID(); }
 
   public void accept(Visitor visitor) {
     visitor.visit(this);

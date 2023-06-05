@@ -15,6 +15,7 @@ public class ArrayLValue extends LValue implements Visitable {
 
   public LValue getLValue() { return this.lvalue; };
   public Expression getExpression() { return this.exp; };
+  public String getHeadId() { return this.lvalue.getHeadId(); };
 
   public void accept(Visitor visitor) {
     visitor.visit(this);

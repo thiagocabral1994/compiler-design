@@ -1,3 +1,14 @@
+data Ponto {
+   x :: Float;
+   y :: Float;
+}
+
+f(d :: Int ) : Int, Char{
+    return 0, '\n';
+}
+
 main(){
-  x = 1+2;
+   x = new Ponto;
+   print x.y;
+   z = f(0)[1] + 2;
 }

@@ -19,20 +19,4 @@ public class Parameter extends Node implements Visitable {
   public void accept(Visitor visitor) {
     visitor.visit(this);
   }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    Function that = (Function) o;
-    return !this.getId().equals(that.getId());
-  }
-
-  @Override
-  public int hashCode() {
-    int result = Integer.parseInt(this.getId());
-    return result;
-  }
 }

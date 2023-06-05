@@ -56,7 +56,7 @@ func returns [Function ast]:
         (COMMA returnType2=type {returnTypes.add($returnType2.ast);})*
     )?
     OPEN_BRACE
-    (cmd {cmds.add($cmd.ast);})?
+    (cmd {cmds.add($cmd.ast);})*
     CLOSE_BRACE
     {$ast = new Function($id.line, $id.pos, $id.text, params, cmds, returnTypes);}
 ;
@@ -306,15 +306,9 @@ exps returns [List<Expression> ast]:
 ;
 
 /* Regras léxicas */
-INTEGER_LITERAL: [0-9] [0-9]*;
-FLOAT_LITERAL: [0-9] [0-9]* '.' [0-9]* | '.' [0-9] [0-9]*;
-CHAR_LITERAL : '\'' CHAR '\'';
 TRUE_LITERAL: 'true';
 FALSE_LITERAL: 'false';
 NULL_LITERAL: 'null';
-IDENTIFIER: [a-z][a-zA-Z_0-9]*;
-
-TYPE_KEYWORD: [A-Z][a-zA-Z_0-9]*;
 DATA_KEYWORD: 'data';
 INT_KEYWORD: 'Int';
 CHAR_KEYWORD: 'Char';
@@ -327,7 +321,6 @@ READ_KEYWORD: 'read';
 PRINT_KEYWORD: 'print';
 RETURN_KEYWORD: 'return';
 NEW_KEYWORD: 'new';
-
 EQUALITY: '==';
 INEQUALITY: '!=';
 GREATER_THAN_OR_EQUAL: '>=';
@@ -354,6 +347,12 @@ SEMICOLON: ';';
 TYPE_ASSIGNMENT: '::';
 COLON: ':';
 DOT: '.';
+INTEGER_LITERAL: [0-9] [0-9]*;
+FLOAT_LITERAL: [0-9] [0-9]* '.' [0-9]* | '.' [0-9] [0-9]*;
+CHAR_LITERAL : '\'' CHAR '\'';
+IDENTIFIER: [a-z][a-zA-Z_0-9]*;
+
+TYPE_KEYWORD: [A-Z][a-zA-Z_0-9]*;
 
 NEWLINE: '\r'? '\n' -> skip;
 WS : [ \t]+ -> skip;

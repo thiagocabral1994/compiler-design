@@ -15,6 +15,7 @@ public class ObjectLValue extends LValue implements Visitable {
 
   public LValue getLValue() { return this.lvalue; };
   public String getParamID() { return this.paramId; };
+  public String getHeadId() { return this.lvalue.getHeadId(); };
 
   public void accept(Visitor visitor) {
     visitor.visit(this);

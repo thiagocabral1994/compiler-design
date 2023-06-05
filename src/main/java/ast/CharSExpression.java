@@ -8,7 +8,18 @@ public class CharSExpression extends SExpression implements Visitable {
 
   public CharSExpression(int line, int col, String value) {
     super(line, col);
-    this.value = value.charAt(0);
+    String trimmedValue = value.replace("'", "");
+    if (trimmedValue.equals("\\n")) {
+      this.value = '\n';
+    } else if (trimmedValue.equals("\\r")) {
+      this.value = '\r';
+    } else if (trimmedValue.equals("\\t")) {
+      this.value = '\t';
+    } else if (trimmedValue.equals("\\b")) {
+      this.value = '\b';
+    } else {
+      this.value = trimmedValue.charAt(0);
+    }
   }
 
   public char getValue() { return value; }
