@@ -1,6 +1,5 @@
 package visitor;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,19 +11,19 @@ import util.*;
 public class InterpretVisitor extends Visitor {
   private static final String MAIN = "main";
 
-  private Stack<HashMap<String, Object>> env;
+  private Stack<HashMap<String, LValueObject>> env;
   private HashMap<String, Function> functions;
   private HashMap<String, List<String>> datas;
-  private Stack<Object> operands;
-  private Stack<Object> lValueTrace;
+  private Stack<LValueObject> operands;
+  private Stack<String> lValueTrace;
   private boolean returnMode, debug;
 
   public InterpretVisitor() {
-    this.env = new Stack<HashMap<String, Object>>();
-    this.env.push(new HashMap<String, Object>());
+    this.env = new Stack<HashMap<String, LValueObject>>();
+    this.env.push(new HashMap<String, LValueObject>());
     this.functions = new HashMap<String, Function>();
-    this.operands = new Stack<Object>();
-    this.lValueTrace = new Stack<Object>();
+    this.operands = new Stack<LValueObject>();
+    this.lValueTrace = new Stack<String>();
     this.returnMode = false;
     this.debug = false;
   }
@@ -42,7 +41,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(SumOperator.execute(left, right));
+      LValueObject result = new LValueObject(SumOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -56,7 +56,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(AndOperator.execute(left, right));
+      LValueObject result = new LValueObject(AndOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -66,7 +67,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(ArrayLValue lvalue) {
     try {
       lvalue.getExpression().accept(this);
-      lValueTrace.push(this.operands.pop());
+      lValueTrace.push(this.operands.pop().toString());
       lvalue.getLValue().accept(this);
     } catch (Exception e) {
       throw new RuntimeException(" (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + e.getMessage() );
@@ -78,12 +79,16 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(AssignmentCommand cmd) {
-    //TODO
     try {
       cmd.getExpression().accept(this);
-      Object value = operands.pop();
-      LValue lvalue = cmd.getLValue();
-      lvalue.accept(this);
+      Object value = operands.pop().getValue();
+
+      cmd.getLValue().accept(this);
+      LValueObject attrObj = this.operands.pop();
+      attrObj.setValue(value);
+
+      // Adicionando o resultado da atribuição
+      this.operands.push(attrObj);
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
     }
@@ -105,8 +110,18 @@ public class InterpretVisitor extends Visitor {
         exp.accept(this);
       }
       function.accept(this);
-      for (int i = cmd.getReturnLValues().size() - 1; i >= 0; i--) {
-        cmd.getReturnLValues().get(i).accept(this); // Ta certo?
+
+      Stack<LValueObject> returnValues = new Stack<LValueObject>();
+      for (int i = 0; i < cmd.getReturnLValues().size(); i++) {
+        this.operands.pop();
+        returnValues.push(this.operands.pop());
+      }
+
+      for (LValue returnLValue : cmd.getReturnLValues()) {
+        returnLValue.accept(this);
+        LValueObject oldValue = this.operands.pop();
+        LValueObject returnValue = returnValues.pop();
+        oldValue.setValue(returnValue);
       }
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage() );
@@ -122,7 +137,8 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(CharSExpression exp) {
     try {
-      operands.push(Character.valueOf(exp.getValue()));
+      LValueObject result = new LValueObject(Character.valueOf(exp.getValue()), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
@@ -157,7 +173,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(DivOperator.execute(left, right));
+      LValueObject result = new LValueObject(DivOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -171,7 +188,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(EqualOperator.execute(left, right));
+      LValueObject result = new LValueObject(EqualOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -180,7 +198,8 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(FalseSExpression exp) {
     try {
-      operands.push(Boolean.valueOf(false));
+      LValueObject result = new LValueObject(Boolean.valueOf(false), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
@@ -192,7 +211,8 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(FloatSExpression exp) {
     try {
-      operands.push(Float.valueOf(exp.getValue()));
+      LValueObject result = new LValueObject(Float.valueOf(exp.getValue()), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
@@ -200,10 +220,11 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(Function function) {
-    HashMap<String, Object> functionEnv = new HashMap<String, Object>();
+    HashMap<String, LValueObject> functionEnv = new HashMap<String, LValueObject>();
     List<Parameter> params = function.getParameters();
     for(int i = params.size() - 1; i >= 0; i--) {
-      functionEnv.put(params.get(i).getId(), operands.pop());
+      LValueObject newObject = new LValueObject(operands.pop(), this.env.peek());
+      functionEnv.put(params.get(i).getId(), newObject);
     }
     env.push(functionEnv);
     for (Command cmd : function.getCommands()) {
@@ -225,27 +246,22 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(IdentifierLValue lvalue) {
     try {
-      this.lValueTrace.push(lvalue.getID());
-      Object variable = this.env.peek().get(lvalue.getID());
-
+      LValueObject variable = this.env.peek().get(lvalue.getID());
       while (!this.lValueTrace.empty()) {
-        Object id = this.lValueTrace.pop();
-        try {
-          if (variable != null && id instanceof String) {
-            Field field = variable.getClass().getDeclaredField((String) id);
-            field.setAccessible(true);
-            variable = field.get(variable);
-          } else if (variable.getClass().isArray() && id instanceof Integer) {
-            Object[] list = ((Object[]) variable);
-            variable = list[((Integer) id).intValue()];
-          } else {
-            throw new RuntimeException(
-                " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + id + " não é um campo válido");
-          }
-        } catch (Exception e) {
+        String id = this.lValueTrace.pop();
+        // Caso 1: Objeto é um mapa para outros objetos.
+        if (variable.getValue() instanceof HashMap) {
+          HashMap<?,?> map = (HashMap<?,?>) variable.getValue();
+          variable = (LValueObject) map.get(id);
+        } else {
           throw new RuntimeException(
-              " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + id + " não é um campo válido");
+              " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + id + " de " + lvalue.getID() + " não é um campo válido");
         }
+      }
+
+      if (!(variable.getValue() instanceof HashMap)) {
+          throw new RuntimeException(
+              " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + lvalue.getID() + " não é um campo válido");
       }
 
       this.operands.push(variable);
@@ -258,7 +274,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(IfCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      if ((Boolean) operands.pop()) {
+      if ((Boolean) operands.pop().getValue()) {
         cmd.getCommand().accept(this);
       }
     } catch (Exception e) {
@@ -270,7 +286,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(IfElseCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      if ((Boolean) operands.pop()) {
+      if ((Boolean) operands.pop().getValue()) {
         cmd.getIfCommand();
       } else {
         cmd.getElseCommand();
@@ -288,7 +304,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(!EqualOperator.execute(left, right));
+      LValueObject result = new LValueObject(!EqualOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -300,7 +317,8 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(IntegerSExpression exp) {
     try {
-      operands.push(Integer.valueOf(exp.getValue()));
+      LValueObject result = new LValueObject(Integer.valueOf(exp.getValue()), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
@@ -310,7 +328,7 @@ public class InterpretVisitor extends Visitor {
   public void visit(IterateCommand cmd) {
     try {
       cmd.getExpression().accept(this);
-      while ((Boolean) operands.pop()) {
+      while ((Boolean) operands.pop().getValue()) {
         cmd.getCommand().accept(this);
         cmd.getExpression().accept(this);
       }
@@ -327,7 +345,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(LessOperator.execute(left, right));
+      LValueObject result = new LValueObject(LessOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -351,7 +370,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(ModOperator.execute(left, right));
+      LValueObject result = new LValueObject(ModOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -365,7 +385,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(MultOperator.execute(left, right));
+      LValueObject result = new LValueObject(MultOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -375,7 +396,8 @@ public class InterpretVisitor extends Visitor {
   public void visit(NegationSExpression exp) {
     try {
       exp.getSExpression().accept(this);
-      operands.push(NotOperator.execute(this.operands.pop()));
+      LValueObject result = new LValueObject(NotOperator.execute(this.operands.pop().getValue()), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -385,7 +407,8 @@ public class InterpretVisitor extends Visitor {
   public void visit(NegativeSExpression exp) {
     try {
       exp.getSExpression().accept(this);
-      operands.push(NegOperator.execute(this.operands.pop()));
+      LValueObject result = new LValueObject(NegOperator.execute(this.operands.pop().getValue()), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -402,14 +425,19 @@ public class InterpretVisitor extends Visitor {
         arrayExp.accept(this);
         Object size = this.operands.pop();
         if (size instanceof Integer) {
-          newData = new Object[((Integer) size).intValue()];
+          HashMap<String, LValueObject> newMap = new HashMap<>();
+          for (int i = 0; i < (Integer) size; i++) {
+            newMap.put(Integer.valueOf(i).toString(), null);
+          }
+          newData = newMap;
         } else {
           throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") Erro ao criar nova instância de " + typeName );
         }
       } else {
         newData = new Object();
       }
-      this.operands.push(newData);
+      LValueObject result = new LValueObject(newData, this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -499,7 +527,8 @@ public class InterpretVisitor extends Visitor {
       Object left, right;
       left = operands.pop();
       right = operands.pop();
-      operands.push(SubOperator.execute(left, right));
+      LValueObject result = new LValueObject(SubOperator.execute(left, right), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage());
     }
@@ -508,7 +537,8 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(TrueSExpression exp) {
     try {
-      operands.push(Boolean.valueOf(true));
+      LValueObject result = new LValueObject(Boolean.valueOf(true), this.env.peek());
+      operands.push(result);
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
