@@ -495,7 +495,7 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(NullSExpression exp) {
     try {
-      operands.push(null);
+      operands.push(new Operand(null));
     } catch (Exception e) {
       throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
     }
