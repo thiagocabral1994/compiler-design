@@ -11,20 +11,9 @@
 // import org.antlr.v4.runtime.tree.*;
 
 import java.io.IOException;
-import java.util.*;
-
-import util.LValueObject;
 
 public class Teste{
      public static void main(String args[]) throws IOException {
-          Map<String, Map<String, LValueObject>> pai = new HashMap<>();
-          Map<String, LValueObject> filho = new HashMap<>();
-          pai.put("filho", filho);
-          filho.put("thiago", new LValueObject(1, null));
-          System.out.println(pai.get("filho").get("thiago").getValue());
-          LValueObject valor = pai.get("filho").get("thiago");
-          valor.setValue(Integer.valueOf(2));
-          System.out.println(pai.get("filho").get("thiago").getValue());
           // CharStream stream = CharStreams.fromFileName(args[0]);
           // // create a lexer that feeds off of stream
           // ParserLexer lex = new ParserLexer(stream);
