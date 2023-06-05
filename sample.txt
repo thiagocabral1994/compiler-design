@@ -1,14 +1,17 @@
-data Ponto {
-   x :: Float;
-   y :: Float;
-}
-
-f(d :: Int ) : Int, Char{
-    return 0, '\n';
+data Ponto{
+   x :: Int;
+   y :: Int;
 }
 
 main(){
-   x = new Ponto;
-   print x.y;
-   z = f(0)[1] + 2;
+   k = 5;
+   p = new Ponto [k];
+   i = 0;
+   iterate(k){
+      p[i] = new Ponto;
+      p[i].x = 12+i;
+      p[i].y = 12-i;
+      i = i + 1;
+   }
+   print '\n';
 }

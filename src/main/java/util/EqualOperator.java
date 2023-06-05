@@ -2,6 +2,9 @@ package util;
 
 public class EqualOperator {
   public static Boolean execute(Object left, Object right) {
+    if(left == null || right == null) {
+      return Boolean.valueOf(false);
+    }
 
     if(left instanceof Integer && right instanceof Integer) {
       return EqualOperator.execute((Integer) left, (Integer) right);

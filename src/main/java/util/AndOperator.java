@@ -2,6 +2,10 @@ package util;
 
 public class AndOperator {
   public static Object execute(Object left, Object right) {
+    if(left == null || right == null) {
+      return Boolean.valueOf(false);
+    }
+
     if(left instanceof Boolean && right instanceof Boolean) {
       return AndOperator.execute((Boolean) left, (Boolean) right);
     }

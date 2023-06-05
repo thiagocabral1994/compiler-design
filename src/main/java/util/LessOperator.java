@@ -2,6 +2,9 @@ package util;
 
 public class LessOperator {
   public static Object execute(Object left, Object right) {
+    if(left == null || right == null) {
+      return Boolean.valueOf(false);
+    }
 
     if(left instanceof Integer && right instanceof Integer) {
       return LessOperator.execute((Integer) left, (Integer) right);

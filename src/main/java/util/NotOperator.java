@@ -2,6 +2,10 @@ package util;
 
 public class NotOperator {
   public static Object execute(Object object) {
+    if(object == null) {
+      return Boolean.valueOf(true);
+    }
+
     
     if(object instanceof Boolean) {
       return NotOperator.execute((Boolean) object);

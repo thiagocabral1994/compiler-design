@@ -136,22 +136,22 @@ cmd returns [Command ast]:
     ASSIGNMENT
     exp7=exp
     SEMICOLON
-    {$ast = new AssignmentCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), $lvalue2.ast, $exp7.ast);}
+    {$ast = new AssignmentCommand($lvalue2.ast.getLine(), $lvalue2.ast.getCol(), new LValueContext($lvalue2.ast), $exp7.ast);}
 |
     {List<Expression> exps = new ArrayList<Expression>();}
-    {List<LValue> lvalues = new ArrayList<LValue>();}
+    {List<LValueContext> lvalueContexts = new ArrayList<LValueContext>();}
     IDENTIFIER
     OPEN_PARENTHESIS
     (exps {exps = $exps.ast;})?
     CLOSE_PARENTHESIS
     (
         LESS_THAN
-        lvalue3=lvalue {lvalues.add($lvalue3.ast);}
-        (COMMA lvalue4=lvalue {lvalues.add($lvalue4.ast);})*
+        lvalue3=lvalue {lvalueContexts.add(new LValueContext($lvalue3.ast));}
+        (COMMA lvalue4=lvalue {lvalueContexts.add(new LValueContext($lvalue4.ast));})*
         GREATER_THAN
     )?
     SEMICOLON
-    {$ast = new CallCommand($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text, exps, lvalues);}
+    {$ast = new CallCommand($IDENTIFIER.line, $IDENTIFIER.pos, $IDENTIFIER.text, exps, lvalueContexts);}
 ;
 
 exp returns [Expression ast]:
@@ -250,7 +250,7 @@ sexp returns [SExpression ast]:
 
 pexp returns [PExpression ast]:
     lvalue1=lvalue
-    {$ast = $lvalue1.ast;}
+    {$ast = new LValueContext($lvalue1.ast);}
 |
     OPEN_PARENTHESIS
     exp1=exp
