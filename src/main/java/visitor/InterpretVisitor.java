@@ -3,6 +3,7 @@ package visitor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Stack;
 
 import ast.*;
@@ -113,7 +114,6 @@ public class InterpretVisitor extends Visitor {
 
       Stack<LValueObject> returnValues = new Stack<LValueObject>();
       for (int i = 0; i < cmd.getReturnLValues().size(); i++) {
-        this.operands.pop();
         returnValues.push(this.operands.pop());
       }
 
@@ -129,9 +129,39 @@ public class InterpretVisitor extends Visitor {
   }
 
   @Override
-  public void visit(CallPExpression node) {
-    // TODO Auto-generated method stub
-    System.out.println("CallPExpression");
+  public void visit(CallPExpression exp) {
+    try {
+      Function function = functions.get(exp.getID());
+      if (function == null) {
+        throw new RuntimeException(
+            " (" + exp.getLine() + ", " + exp.getCol() + ") Função " + exp.getID() + " não existe!");
+      }
+
+      for (Expression paramExp : exp.getParamExpressions()) {
+        paramExp.accept(this);
+      }
+      function.accept(this);
+
+      exp.getBracketExpression().accept(this);;
+      Object returnIndex = this.operands.pop().getValue();
+      
+      if (!(returnIndex instanceof Integer)) {
+        throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") Índice de retorno deve ser um inteiro" );
+      }
+
+      Stack<LValueObject> returnValues = new Stack<LValueObject>();
+      for (int i = function.getReturnTypes().size() - 1; i >= (Integer) returnIndex; i--) {
+        /**
+         * Retiramos todos os valores indesejados. Ex:
+         * [1, 2, 3, 4 ,5].
+         * 
+         * Se queremos o índice `3`, então fazemos pop de `4` e `5`.
+         */
+        returnValues.push(this.operands.pop());
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(" (" + exp.getLine() + ", " + exp.getCol() + ") " + e.getMessage() );
+    }
   }
 
   @Override
@@ -149,7 +179,7 @@ public class InterpretVisitor extends Visitor {
 
   @Override
   public void visit(CustomBasicType type) {
-    if (datas.get(type.getTypeName()) == null) {
+    if (this.datas.get(type.getTypeName()) == null) {
       throw new RuntimeException(" (" + type.getLine() + ", " + type.getCol() + ") " + type.getTypeName() + " não existe!" );
     }
   }
@@ -162,7 +192,7 @@ public class InterpretVisitor extends Visitor {
     for (Parameter declaration : declarations) {
       declarationIds.add(declaration.getId());
     }
-    datas.put(id, declarationIds);
+    this.datas.put(id, declarationIds);
   }
 
   @Override
@@ -504,8 +534,21 @@ public class InterpretVisitor extends Visitor {
   public void visit(ReadCommand cmd) {
     try {
       cmd.getLValue().accept(this);
-      System.out.print(this.operands.pop());
-      //TODO
+      LValueObject lvalueObj = this.operands.pop();
+      Scanner scanner = new Scanner(System.in);
+      if (lvalueObj.getValue() instanceof Boolean) {
+        lvalueObj.setValue(Boolean.valueOf(scanner.nextBoolean()));
+      } else if (lvalueObj.getValue() instanceof Integer) {
+        lvalueObj.setValue(Integer.valueOf(scanner.nextInt()));
+      } else if (lvalueObj.getValue() instanceof Float) {
+        lvalueObj.setValue(Float.valueOf(scanner.nextFloat()));
+      } else if (lvalueObj.getValue() instanceof Character) {
+        lvalueObj.setValue(Character.valueOf(scanner.next().charAt(0)));
+      } else {
+        scanner.close();
+        throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") Tipo inválido para leitura");
+      }
+      scanner.close();
     } catch (Exception e) {
       throw new RuntimeException(" (" + cmd.getLine() + ", " + cmd.getCol() + ") " + e.getMessage());
     }
