@@ -448,11 +448,11 @@ public class InterpretVisitor extends Visitor {
   public void visit(NewPExpression exp) {
     try {
       String typeName = exp.getType().getTypeName();
-      Expression arrayExp = exp.getExpression();
+      Expression arrayIndexExp = exp.getExpression();
 
       Object newData = null;
-      if (arrayExp != null) {
-        arrayExp.accept(this);
+      if (arrayIndexExp != null) {
+        arrayIndexExp.accept(this);
         Object size = this.operands.pop();
         if (size instanceof Integer) {
           HashMap<String, LValueObject> newMap = new HashMap<>();
