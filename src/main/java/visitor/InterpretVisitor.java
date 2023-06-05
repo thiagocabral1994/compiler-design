@@ -93,9 +93,8 @@ public class InterpretVisitor extends Visitor {
         (attrObj.getValue() == null && this.env.peek().get(ctx.getLValue().getHeadId()) == null)
         || ctx.getLValue() instanceof IdentifierLValue
         ) {
-          this.env.peek().put(ctx.getLValue().getHeadId(), value);
+        this.env.peek().put(ctx.getLValue().getHeadId(), new Operand(value.getValue()));
       } else {
-        // Caso 1: Object (ou Array)
         // Alteramos o valor do Operando, mas sem alterar a referência
         attrObj.setValue(value.getValue());
       }
@@ -269,7 +268,9 @@ public class InterpretVisitor extends Visitor {
     }
     env.push(functionEnv);
     for (Command cmd : function.getCommands()) {
-      cmd.accept(this);
+      if (!this.returnMode) {
+        cmd.accept(this);
+      }
     }
 
     if(this.debug && function.getId().equals(MAIN)) {
@@ -299,10 +300,10 @@ public class InterpretVisitor extends Visitor {
         }
       }
 
-      if (variable != null && variable.getValue() instanceof HashMap) {
-          throw new RuntimeException(
-              " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + lvalue.getID() + " não é um campo válido");
-      }
+      // if (variable != null && variable.getValue() instanceof HashMap) {
+      //     throw new RuntimeException(
+      //         " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + lvalue.getID() + " não é um campo válido");
+      // }
 
       if (variable == null) {
         this.operands.push(new Operand(null));
@@ -400,10 +401,9 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(ListCommand node) {
     for (Command cmd : node.getCommands()) {
-      if (this.returnMode) {
-        return;
+      if (!this.returnMode) {
+        cmd.accept(this);
       }
-      cmd.accept(this);
     }
   }
 
@@ -587,6 +587,7 @@ public class InterpretVisitor extends Visitor {
       exp.accept(this);
     }
     this.returnMode = true;
+    System.out.println("RETURN: "+this.returnMode);
   }
 
   @Override
