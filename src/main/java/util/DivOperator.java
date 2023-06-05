@@ -3,33 +3,33 @@ package util;
 public class DivOperator {
   public static Object execute(Object left, Object right) {
     if(left instanceof Integer && right instanceof Integer) {
-      return AndOperator.execute((Integer) left, (Integer) right);
+      return DivOperator.execute((Integer) left, (Integer) right);
     }
     if(left instanceof Integer && right instanceof Character) {
-      return AndOperator.execute((Integer) left, (Character) right);
+      return DivOperator.execute((Integer) left, (Character) right);
     }
     if(left instanceof Integer && right instanceof Float) {
-      return AndOperator.execute((Integer) left, (Float) right);
+      return DivOperator.execute((Integer) left, (Float) right);
     }
 
     if(left instanceof Character && right instanceof Character) {
-      return AndOperator.execute((Character) left, (Character) right);
+      return DivOperator.execute((Character) left, (Character) right);
     }
     if(left instanceof Character && right instanceof Integer) {
-      return AndOperator.execute((Character) left, (Integer) right);
+      return DivOperator.execute((Character) left, (Integer) right);
     }
     if(left instanceof Character && right instanceof Float) {
-      return AndOperator.execute((Character) left, (Float) right);
+      return DivOperator.execute((Character) left, (Float) right);
     }
 
     if(left instanceof Float && right instanceof Float) {
-      return AndOperator.execute((Float) left, (Float) right);
+      return DivOperator.execute((Float) left, (Float) right);
     }
     if(left instanceof Float && right instanceof Integer) {
-      return AndOperator.execute((Float) left, (Integer) right);
+      return DivOperator.execute((Float) left, (Integer) right);
     }
     if(left instanceof Float && right instanceof Character) {
-      return AndOperator.execute((Float) left, (Character) right);
+      return DivOperator.execute((Float) left, (Character) right);
     }
 
     throw new RuntimeException("Divisão inválida: " + left.toString() + ", " + right.toString());

@@ -57,8 +57,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(AndOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
@@ -212,8 +212,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(DivOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
@@ -227,8 +227,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(EqualOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
@@ -346,8 +346,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(!EqualOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
@@ -413,8 +413,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(ModOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
@@ -428,8 +428,8 @@ public class InterpretVisitor extends Visitor {
       exp.getLeft().accept(this);
       exp.getRight().accept(this);
       Operand left, right;
-      left = operands.pop();
       right = operands.pop();
+      left = operands.pop();
       Operand result = new Operand(MultOperator.execute(left.getValue(), right.getValue()));
       operands.push(result);
     } catch (Exception e) {
