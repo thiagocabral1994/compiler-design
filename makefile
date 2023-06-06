@@ -9,7 +9,7 @@ compile : src/main/java/parser/Parser.java
 	rm -f javalist
 	
 run: compile
-	java -cp antlr-4.8-complete.jar:src/main/java Teste sample.txt
+	java -cp antlr-4.8-complete.jar:src/main/java Teste $(path)
 
 clean: 
 	rm -fr src/main/java/parser/.antlr

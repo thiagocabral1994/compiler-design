@@ -1,7 +1,0 @@
-// ignorar linha
-main(){
-  /*
-    ignorar bloco
-  */
-  x = 1+2;
-}
