@@ -582,7 +582,6 @@ public class InterpretVisitor extends Visitor {
       exp.accept(this);
     }
     this.returnMode = true;
-    System.out.println("RETURN: "+this.returnMode);
   }
 
   @Override
