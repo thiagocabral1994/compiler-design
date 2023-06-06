@@ -300,11 +300,6 @@ public class InterpretVisitor extends Visitor {
         }
       }
 
-      // if (variable != null && variable.getValue() instanceof HashMap) {
-      //     throw new RuntimeException(
-      //         " (" + lvalue.getLine() + ", " + lvalue.getCol() + ") " + lvalue.getID() + " não é um campo válido");
-      // }
-
       if (variable == null) {
         this.operands.push(new Operand(null));
         return;
