@@ -1,4 +1,4 @@
-# Tarefa 01 - Teoria dos Compiladores
+# Tarefa 02 - Teoria dos Compiladores
 
 #### Requisitos
 
@@ -8,6 +8,8 @@ Java 8 ou superior
 
 - Descompactar o projeto;
 
-- Para rodar o projeto, execute o script run.sh. É obrigatório um segundo parâmetro com o arquivo de teste!
+- Para compilar, execute `make compile`
 
-- Relatório consta no pdf "Entrega 01 - Compiladores", presente na raiz do projeto
+- Para executrar, execute `make run path=CAMINHO_DO_ARQUIVO`
+
+- Relatório consta no pdf "Relatório - Trabalho 2", presente na raiz do projeto
