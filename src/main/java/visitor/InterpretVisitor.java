@@ -547,7 +547,7 @@ public class InterpretVisitor extends Visitor {
   @Override
   public void visit(ReadCommand cmd) {
     try {
-      LValue lvalue = cmd.getLValue();
+      LValueContext lvalue = cmd.getLValue();
       lvalue.accept(this);
       Operand lvalueObj = this.operands.pop();
       Scanner scanner = new Scanner(System.in);
@@ -565,9 +565,9 @@ public class InterpretVisitor extends Visitor {
       }
       scanner.close();
 
-      if ((lvalueObj.getValue() == null && this.env.peek().get(lvalue.getHeadId()) == null)
-          || lvalue instanceof IdentifierLValue) {
-        this.env.peek().put(lvalue.getHeadId(), new Operand(value));
+      if ((lvalueObj.getValue() == null && this.env.peek().get(lvalue.getLValue().getHeadId()) == null)
+          || lvalue.getLValue() instanceof IdentifierLValue) {
+        this.env.peek().put(lvalue.getLValue().getHeadId(), new Operand(value));
       } else {
         lvalueObj.setValue(value);
       }

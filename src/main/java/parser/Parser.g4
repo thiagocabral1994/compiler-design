@@ -118,7 +118,7 @@ cmd returns [Command ast]:
     READ_KEYWORD
     lvalue1=lvalue
     SEMICOLON
-    {$ast = new ReadCommand($READ_KEYWORD.line, $READ_KEYWORD.pos, $lvalue1.ast);}
+    {$ast = new ReadCommand($READ_KEYWORD.line, $READ_KEYWORD.pos, new LValueContext($lvalue1.ast));}
 |
     PRINT_KEYWORD
     exp4=exp
