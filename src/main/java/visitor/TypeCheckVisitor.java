@@ -1,6 +1,8 @@
 package visitor;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Stack;
 
@@ -18,6 +20,7 @@ public class TypeCheckVisitor extends Visitor {
 
   private List<String> logError;
 
+  private Map<String, Map<String, SemanticType>> dataMap;
   private TypeEnv<LocalEnv<SemanticType>> env;
   private LocalEnv<SemanticType> activeScope;
 
@@ -28,6 +31,7 @@ public class TypeCheckVisitor extends Visitor {
     this.stack = new Stack<>();
     this.env = new TypeEnv<>();
     this.logError = new ArrayList<>();
+    this.dataMap = new HashMap<>();
   }
 
   public int getNumErrors() { return this.logError.size(); }
@@ -104,9 +108,15 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(Data node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(Data data) {
+    Map<String, SemanticType> declarationsMap = new HashMap<>();
+
+    for (Parameter declaration : data.getDeclarations()) {
+      declaration.accept(this);
+      declarationsMap.put(declaration.getId(), this.stack.pop());
+    }
+
+    this.dataMap.put(data.getId(), declarationsMap);
   }
 
   @Override
@@ -273,7 +283,9 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(Program program) {
-    // TODO: Inicializar a lista de Data.
+    for (Data data : program.getDatas()) {
+      data.accept(this);
+    }
 
     for (Function function : program.getFunctions()) {
       List<SemanticType> typeArgs = new ArrayList<>();
