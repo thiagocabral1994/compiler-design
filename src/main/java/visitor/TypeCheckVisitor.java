@@ -1,5 +1,6 @@
 package visitor;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
@@ -18,10 +19,24 @@ public class TypeCheckVisitor extends Visitor {
   private List<String> logError;
 
   private TypeEnv<LocalEnv<SemanticType>> env;
-  private LocalEnv<SemanticType> temp;
+  private LocalEnv<SemanticType> activeScope;
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
+
+  public TypeCheckVisitor() {
+    this.stack = new Stack<>();
+    this.env = new TypeEnv<>();
+    this.logError = new ArrayList<>();
+  }
+
+  public int getNumErrors() { return this.logError.size(); }
+
+  public void printErrors() {
+    for (String string : this.logError) {
+      System.out.println(string);
+    }
+  }
 
   @Override
   public void visit(AdditionAExpression node) {
@@ -72,9 +87,8 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(CharSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(CharSExpression exp) {
+    this.stack.push(this.typeChar);
   }
 
   @Override
@@ -126,9 +140,21 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(Function node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(Function function) {
+    this.returnCheck = false;
+    this.activeScope = env.get(function.getId());
+    for (Parameter parameter : function.getParameters()) {
+      parameter.getType().accept(this);
+      this.activeScope.set(parameter.getId(), this.stack.pop());
+    }
+
+    for (Command cmd : function.getCommands()) {
+      cmd.accept(this);
+    }
+
+    if (function.getReturnTypes().size() > 0 && !this.returnCheck) {
+      this.logError.add(function.getLine() + ", " + function.getCol() + ": Função " + function.getId() + " deve retornar algum valor.");
+    }
   }
 
   @Override
@@ -240,15 +266,40 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(PrintCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(PrintCommand cmd) {
+    cmd.getExpression().accept(this);
+    this.stack.pop();
   }
 
   @Override
-  public void visit(Program node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(Program program) {
+    // TODO: Inicializar a lista de Data.
+
+    for (Function function : program.getFunctions()) {
+      List<SemanticType> typeArgs = new ArrayList<>();
+      for (Parameter parameter : function.getParameters()) {
+        parameter.accept(this);
+        typeArgs.add(this.stack.pop());
+      }
+
+      List<SemanticType> typeReturns = new ArrayList<>();
+      for (Type returnType : function.getReturnTypes()) {
+        returnType.accept(this);
+        typeReturns.add(this.stack.pop());
+      }
+
+      STypeFunction typeFunction = STypeFunction.create(typeArgs, typeReturns);
+      String id = function.getId();
+      env.set(id, new LocalEnv<>(id, typeFunction));
+    }
+
+    // TODO: Validar a main:
+    // 1) Se ela existe.
+    // 2) Se ela é void.
+
+    for(Function function : program.getFunctions()) {
+      function.accept(this);
+    }
   }
 
   @Override

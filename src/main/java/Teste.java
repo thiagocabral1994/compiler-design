@@ -25,7 +25,12 @@ public class Teste{
           ParserParser parser = new ParserParser(tokens);
 
           Program tree = parser.prog().ast;
-          tree.accept(new TypeCheckVisitor(DEBUG));
-          // tree.accept(new InterpretVisitor(DEBUG));
+          TypeCheckVisitor typeChecker = new TypeCheckVisitor();
+          tree.accept(typeChecker);
+          if (typeChecker.getNumErrors() > 0) {
+               typeChecker.printErrors();
+               throw new IOException("Erro na análise semântica");
+          }
+          tree.accept(new InterpretVisitor(DEBUG));
      }
 }

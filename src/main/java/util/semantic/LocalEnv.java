@@ -2,9 +2,9 @@ package util.semantic;
 
 public class LocalEnv<A> extends TypeEnv<A> {
   private String id;
-  private SemanticType type;
+  private A type;
 
-  public LocalEnv(String id, SemanticType type) {
+  public LocalEnv(String id, A type) {
     this.type = type;
     this.id = id;
   }
@@ -13,7 +13,7 @@ public class LocalEnv<A> extends TypeEnv<A> {
     return this.id;
   }
 
-  public SemanticType getFunctionType() {
+  public A getFunctionType() {
     return this.type;
   }
 
