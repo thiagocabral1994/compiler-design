@@ -46,11 +46,11 @@ public class MultOperator {
     return Float.valueOf(left.intValue() * right.floatValue());
   }
   
-  public static Float execute(Character left, Character right) {
-    return Float.valueOf(left.charValue() * right.charValue());
+  public static Integer execute(Character left, Character right) {
+    return Integer.valueOf(left.charValue() * right.charValue());
   }
-  public static Float execute(Character left, Integer right) {
-    return Float.valueOf(left.charValue() * right.intValue());
+  public static Integer execute(Character left, Integer right) {
+    return Integer.valueOf(left.charValue() * right.intValue());
   }
   public static Float execute(Character left, Float right) {
     return Float.valueOf(left.charValue() * right.floatValue());

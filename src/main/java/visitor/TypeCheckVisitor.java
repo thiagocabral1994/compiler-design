@@ -42,14 +42,14 @@ public class TypeCheckVisitor extends Visitor {
     }
   }
 
-
   private void typeArithmeticBinOp(Node n, String opName){
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
 
+    System.out.println("Operador: " + opName +" e tipos " + left.toString() + " e " + right.toString());
 
-    if( (right.match(typeInt) ) ){
+    if( (right.match(typeInt) ) || right.match(typeChar)){
         if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
           this.stack.push(left);
         }else{
@@ -59,14 +59,7 @@ public class TypeCheckVisitor extends Visitor {
        
     }else if(right.match(typeFloat)){
       if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
-          this.stack.push(left);
-      }else{
-          logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
-          this.stack.push(typeError);
-      }
-    }else if(right.match(typeChar)){
-      if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
-          this.stack.push(left);
+          this.stack.push(right);
       }else{
           logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
           this.stack.push(typeError);
@@ -76,8 +69,6 @@ public class TypeCheckVisitor extends Visitor {
         this.stack.push(typeError);
     }
   }
-
-
 
   @Override
   public void visit(AdditionAExpression exp) {
@@ -99,13 +90,10 @@ public class TypeCheckVisitor extends Visitor {
       this.stack.push(typeBool);
     }
     else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador && não se aplica aos tipos " + left.toString() + " e " + right.toString() );
       this.stack.push(typeError);
     }
-
-
   }
-
 
   @Override
   public void visit(ArrayLValue node) {
@@ -160,7 +148,6 @@ public class TypeCheckVisitor extends Visitor {
       this.logError.add(type.getLine() + ", " + type.getCol() + ": Tipo " + type.getTypeName() + " não existe!");
       return;
     }
-
     this.stack.push(STypeCustom.create(name));
   }
 
@@ -172,7 +159,6 @@ public class TypeCheckVisitor extends Visitor {
       declaration.accept(this);
       declarationsMap.put(declaration.getId(), this.stack.pop());
     }
-
     this.dataMap.put(data.getId(), declarationsMap);
   }
 
@@ -191,14 +177,13 @@ public class TypeCheckVisitor extends Visitor {
     right = this.stack.pop();
     left = this.stack.pop();
 
-
     if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
     } else if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
     }
     else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador == não se aplica aos tipos " + left.toString() + " e " + right.toString() );
       this.stack.push(typeError);
     }
   }
@@ -262,14 +247,13 @@ public class TypeCheckVisitor extends Visitor {
     right = this.stack.pop();
     left = this.stack.pop();
 
-
     if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
     } else if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
     }
     else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador != não se aplica aos tipos " + left.toString() + " e " + right.toString() );
       this.stack.push(typeError);
     }
   }
@@ -298,18 +282,16 @@ public class TypeCheckVisitor extends Visitor {
     right = this.stack.pop();
     left = this.stack.pop();
 
-
     if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
     } else if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
     }
     else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador < não se aplica aos tipos " + left.toString() + " e " + right.toString() );
       this.stack.push(typeError);
     }
   }
-
 
   @Override
   public void visit(ListCommand node) {
@@ -332,15 +314,33 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(NegationSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(NegationSExpression exp) {
+    exp.getSExpression().accept(this);
+    SemanticType type = this.stack.pop();
+
+    if(type.match(typeBool)) {
+      this.stack.push(typeBool);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
+      this.stack.push(typeError);
+    }
   }
 
   @Override
-  public void visit(NegativeSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(NegativeSExpression exp) {
+    exp.getSExpression().accept(this);
+    SemanticType type = this.stack.pop();
+    if(type.match(typeInt) || type.match(typeChar)) {
+      this.stack.push(typeInt);
+    }
+    else if(type.match(typeFloat)) {
+      this.stack.push(typeFloat);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
+      this.stack.push(typeError);
+    }
   }
 
   @Override
