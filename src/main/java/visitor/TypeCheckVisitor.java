@@ -74,8 +74,7 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(BooleanBasicType node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeBool);
   }
 
   @Override
@@ -97,14 +96,19 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(CharacterBasicType node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeChar);
   }
 
   @Override
-  public void visit(CustomBasicType node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(CustomBasicType type) {
+    String name = type.getTypeName();
+
+    if (!this.dataMap.containsKey(name)) {
+      this.logError.add(type.getLine() + ", " + type.getCol() + ": Tipo " + type.getTypeName() + " não existe!");
+      return;
+    }
+
+    this.stack.push(STypeCustom.create(name));
   }
 
   @Override
@@ -133,20 +137,17 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(FalseSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeBool);
   }
 
   @Override
   public void visit(FloatBasicType node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeFloat);
   }
 
   @Override
   public void visit(FloatSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeFloat);
   }
 
   @Override
@@ -193,14 +194,12 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(IntegerBasicType node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeInt);
   }
 
   @Override
   public void visit(IntegerSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeInt);
   }
 
   @Override
@@ -264,9 +263,8 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(Parameter node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(Parameter param) {
+    param.getType().accept(this);
   }
 
   @Override
@@ -346,8 +344,7 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(TrueSExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    this.stack.push(this.typeBool);
   }
 
   @Override
