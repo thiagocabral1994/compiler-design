@@ -59,16 +59,16 @@ public class STypeFunction extends SemanticType {
     String string = "";
 
     if (this.params.size() > 0) {
-      string = this.params.get(0).toString();
+      string += this.params.get(0).toString();
       for (int i = 1; i < this.params.size(); i++) {
-        string = "->" + this.params.get(i).toString();
+        string += "->" + this.params.get(i).toString();
       }
     }
 
     if (this.returnTypes.size() > 0) {
-      string = this.params.size() > 0 ? "->" + this.returnTypes.get(0).toString() : this.returnTypes.get(0).toString();
+      string += this.params.size() > 0 ? "->" + this.returnTypes.get(0).toString() : this.returnTypes.get(0).toString();
       for (int i = 1; i < this.returnTypes.size(); i++) {
-        string = "->" + this.returnTypes.get(i).toString();
+        string += "->" + this.returnTypes.get(i).toString();
       }
     }
 
