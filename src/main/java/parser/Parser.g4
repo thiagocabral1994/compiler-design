@@ -178,7 +178,7 @@ rexp returns [RExpression ast]:
     rexp2=rexp
     INEQUALITY
     aexp4=aexp
-    {$ast = new EqualityRExpression($rexp2.ast.getLine(), $rexp2.ast.getCol(), $rexp2.ast, $aexp4.ast);}
+    {$ast = new InequalityRExpression($rexp2.ast.getLine(), $rexp2.ast.getCol(), $rexp2.ast, $aexp4.ast);}
 |
     aexp5=aexp
     {$ast = $aexp5.ast;}

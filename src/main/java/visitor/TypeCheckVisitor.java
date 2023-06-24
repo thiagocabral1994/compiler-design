@@ -42,17 +42,62 @@ public class TypeCheckVisitor extends Visitor {
     }
   }
 
+
+  private void typeArithmeticBinOp(Node n, String opName){
+    SemanticType left, right;
+    right = this.stack.pop();
+    left = this.stack.pop();
+
+
+    if( (right.match(typeInt) ) ){
+        if(left.match(typeInt) || left.match(typeFloat)){
+          this.stack.push(left);
+        }else{
+          logError.add( n.getLine() + ", " + n.getCol() + ": Operador" + opName +"não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+          this.stack.push(typeError);
+        }
+       
+    }else if(right.match(typeFloat)){
+      if(left.match(typeInt) || left.match(typeFloat) ){
+          this.stack.push(left);
+      }else{
+          logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+          this.stack.push(typeError);
+      }
+    }else{
+        logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+        this.stack.push(typeError);
+    }
+  }
+
+
   @Override
-  public void visit(AdditionAExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(AdditionAExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    typeArithmeticBinOp(exp,"+");
   }
 
   @Override
-  public void visit(AndExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(AndExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    SemanticType left, right;
+    right = this.stack.pop();
+    left = this.stack.pop();
+
+
+    if(right.match(typeBool) && left.match(typeBool)) {
+      this.stack.push(typeBool);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      this.stack.push(typeError);
+    }
+
+
   }
+
 
   @Override
   public void visit(ArrayLValue node) {
@@ -124,15 +169,30 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(DivisionMExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(DivisionMExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    typeArithmeticBinOp(exp,"/");    
   }
 
   @Override
-  public void visit(EqualityRExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(EqualityRExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    SemanticType left, right;
+    right = this.stack.pop();
+    left = this.stack.pop();
+
+
+    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+      this.stack.push(typeBool);
+    } else if (right.match(typeBool) && left.match(typeBool)) {
+      this.stack.push(typeBool);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      this.stack.push(typeError);
+    }
   }
 
   @Override
@@ -187,9 +247,23 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(InequalityRExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(InequalityRExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    SemanticType left, right;
+    right = this.stack.pop();
+    left = this.stack.pop();
+
+
+    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+      this.stack.push(typeBool);
+    } else if (right.match(typeBool) && left.match(typeBool)) {
+      this.stack.push(typeBool);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      this.stack.push(typeError);
+    }
   }
 
   @Override
@@ -308,7 +382,7 @@ public class TypeCheckVisitor extends Visitor {
 
         // Criamos uma typeMain sem argumentos ou tipos de retorno (void).
         STypeFunction typeMain = STypeFunction.create();
-        
+       
         if (!typeMain.match(typeFunction)) {
           this.logError.add(function.getLine() + ", " + function.getCol() + " Função main não deve ter argumentos ou tipo de retorno.");
         }
