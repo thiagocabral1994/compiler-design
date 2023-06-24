@@ -1,9 +1,27 @@
 package visitor;
 
+import java.util.List;
+import java.util.Stack;
+
 import ast.*;
 import util.semantic.*;
 
 public class TypeCheckVisitor extends Visitor {
+  private static final String MAIN = "main";
+
+  private STypeInt typeInt = STypeInt.create();
+  private STypeFloat typeFloat = STypeFloat.create();
+  private STypeChar typeChar = STypeChar.create();
+  private STypeBool typeBool = STypeBool.create();
+  private STypeError typeError = STypeError.create();
+
+  private List<String> logError;
+
+  private TypeEnv<LocalEnv<SemanticType>> env;
+  private LocalEnv<SemanticType> temp;
+
+  private Stack<SemanticType> stack;
+  private boolean returnCheck;
 
   @Override
   public void visit(AdditionAExpression node) {
