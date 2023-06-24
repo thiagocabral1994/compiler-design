@@ -1,4 +1,4 @@
-package util;
+package util.interpret;
 
 public class EqualOperator {
   public static Boolean execute(Object left, Object right) {

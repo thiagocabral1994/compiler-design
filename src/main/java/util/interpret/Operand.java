@@ -1,4 +1,4 @@
-package util;
+package util.interpret;
 
 public class Operand {
   private Object value;

@@ -7,7 +7,7 @@ import java.util.Scanner;
 import java.util.Stack;
 
 import ast.*;
-import util.*;
+import util.interpret.*;
 
 public class InterpretVisitor extends Visitor {
   private static final String MAIN = "main";

@@ -1,4 +1,4 @@
-package util;
+package util.interpret;
 
 public class ModOperator {
   public static Object execute(Object left, Object right) {

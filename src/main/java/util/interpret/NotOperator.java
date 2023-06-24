@@ -1,4 +1,4 @@
-package util;
+package util.interpret;
 
 public class NotOperator {
   public static Object execute(Object object) {

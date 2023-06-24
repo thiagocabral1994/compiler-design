@@ -13,6 +13,8 @@ import org.antlr.v4.runtime.tree.*;
 import java.io.IOException;
 
 public class Teste{
+     public static final boolean DEBUG = true;
+
      public static void main(String args[]) throws IOException {
           CharStream stream = CharStreams.fromFileName(args[0]);
           // create a lexer that feeds off of stream
@@ -23,6 +25,7 @@ public class Teste{
           ParserParser parser = new ParserParser(tokens);
 
           Program tree = parser.prog().ast;
-          tree.accept(new InterpretVisitor(true));
+          tree.accept(new TypeCheckVisitor(DEBUG));
+          // tree.accept(new InterpretVisitor(DEBUG));
      }
 }

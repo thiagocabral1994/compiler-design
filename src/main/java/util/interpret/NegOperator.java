@@ -1,4 +1,4 @@
-package util;
+package util.interpret;
 
 public class NegOperator {
   public static Object execute(Object object) {
