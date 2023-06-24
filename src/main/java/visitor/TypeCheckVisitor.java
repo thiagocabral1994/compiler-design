@@ -50,7 +50,7 @@ public class TypeCheckVisitor extends Visitor {
 
 
     if( (right.match(typeInt) ) ){
-        if(left.match(typeInt) || left.match(typeFloat)){
+        if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
           this.stack.push(left);
         }else{
           logError.add( n.getLine() + ", " + n.getCol() + ": Operador" + opName +"não se aplica aos tipos " + left.toString() + " e " + right.toString() );
@@ -58,7 +58,14 @@ public class TypeCheckVisitor extends Visitor {
         }
        
     }else if(right.match(typeFloat)){
-      if(left.match(typeInt) || left.match(typeFloat) ){
+      if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
+          this.stack.push(left);
+      }else{
+          logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+          this.stack.push(typeError);
+      }
+    }else if(right.match(typeChar)){
+      if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
           this.stack.push(left);
       }else{
           logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
@@ -69,6 +76,7 @@ public class TypeCheckVisitor extends Visitor {
         this.stack.push(typeError);
     }
   }
+
 
 
   @Override
@@ -283,10 +291,25 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(LessRExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(LessRExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    SemanticType left, right;
+    right = this.stack.pop();
+    left = this.stack.pop();
+
+
+    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+      this.stack.push(typeBool);
+    } else if (right.match(typeBool) && left.match(typeBool)) {
+      this.stack.push(typeBool);
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador & não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+      this.stack.push(typeError);
+    }
   }
+
 
   @Override
   public void visit(ListCommand node) {
@@ -295,15 +318,17 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ModulusMExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(ModulusMExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    typeArithmeticBinOp(exp,"%");
   }
 
   @Override
-  public void visit(MultiplicationMExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(MultiplicationMExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    typeArithmeticBinOp(exp,"*");
   }
 
   @Override
@@ -411,9 +436,10 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(SubtractionAExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(SubtractionAExpression exp) {
+    exp.getLeft().accept(this);
+    exp.getRight().accept(this);
+    typeArithmeticBinOp(exp,"-");
   }
 
   @Override
