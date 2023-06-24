@@ -1,5 +1,6 @@
 package util.semantic;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class STypeFunction extends SemanticType {
@@ -11,6 +12,10 @@ public class STypeFunction extends SemanticType {
     this.returnTypes = returnTypes;
   }
   
+  public static STypeFunction create() { 
+    return new STypeFunction(new ArrayList<>(), new ArrayList<>()); 
+  }
+
   public static STypeFunction create(List<SemanticType> params, List<SemanticType> returnTypes) { 
     return new STypeFunction(params, returnTypes); 
   }

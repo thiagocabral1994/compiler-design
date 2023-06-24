@@ -287,6 +287,7 @@ public class TypeCheckVisitor extends Visitor {
       data.accept(this);
     }
 
+    Function main = null;
     for (Function function : program.getFunctions()) {
       List<SemanticType> typeArgs = new ArrayList<>();
       for (Parameter parameter : function.getParameters()) {
@@ -303,11 +304,22 @@ public class TypeCheckVisitor extends Visitor {
       STypeFunction typeFunction = STypeFunction.create(typeArgs, typeReturns);
       String id = function.getId();
       env.set(id, new LocalEnv<>(id, typeFunction));
+
+      if (function.getId().equals(MAIN)) {
+        main = function;
+
+        // Criamos uma typeMain sem argumentos ou tipos de retorno (void).
+        STypeFunction typeMain = STypeFunction.create();
+        
+        if (!typeMain.match(typeFunction)) {
+          this.logError.add(function.getLine() + ", " + function.getCol() + " Função main não deve ter argumentos ou tipo de retorno.");
+        }
+      }
     }
 
-    // TODO: Validar a main:
-    // 1) Se ela existe.
-    // 2) Se ela é void.
+    if (main == null) {
+      this.logError.add(program.getLine() + ", " + program.getCol() + " Programa deve ter uma função main.");
+    }
 
     for(Function function : program.getFunctions()) {
       function.accept(this);
