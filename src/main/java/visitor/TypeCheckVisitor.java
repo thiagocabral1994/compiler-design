@@ -67,14 +67,6 @@ public class TypeCheckVisitor extends Visitor {
           logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
           this.stack.push(typeError);
       }
-    } else if (right.match(typeChar)) {
-      if (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)) {
-        this.stack.push(left);
-      } else {
-        logError.add(n.getLine() + ", " + n.getCol() + ": Operador " + opName + " não se aplica aos tipos "
-            + left.toString() + " e " + right.toString());
-        this.stack.push(typeError);
-      }
     } else {
       logError.add(n.getLine() + ", " + n.getCol() + ": Operador " + opName + " não se aplica aos tipos "
           + left.toString() + " e " + right.toString());
