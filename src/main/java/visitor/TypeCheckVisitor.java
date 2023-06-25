@@ -382,15 +382,40 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(IfCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(IfCommand cmd) {
+    cmd.getExpression().accept(this);
+    SemanticType testType = this.stack.pop();
+    if (testType.match(this.typeBool)) {
+      this.returnCheck = false;
+      cmd.getCommand().accept(this);
+      return;
+    }
+
+    logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Expressão de teste do IF deve ter tipo Bool");
   }
 
   @Override
-  public void visit(IfElseCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(IfElseCommand cmd) {
+    boolean ifReturn, elseReturn;
+    elseReturn = true;
+    cmd.getExpression().accept(this);
+    SemanticType testType = this.stack.pop();
+    if (testType.match(this.typeBool)) {
+      this.returnCheck = false;
+      cmd.getIfCommand().accept(this);
+      ifReturn = this.returnCheck;
+      Command elseCmd = cmd.getElseCommand();
+      if (elseCmd != null) {
+        this.returnCheck = false;
+        elseCmd.accept(this);
+        elseReturn = this.returnCheck;
+      }
+
+      this.returnCheck = ifReturn && elseReturn;
+      return;
+    }
+
+    logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Expressão de teste do IF deve ter tipo Bool");
   }
 
   @Override
@@ -424,9 +449,15 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(IterateCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(IterateCommand cmd) {
+    cmd.getExpression().accept(this);
+    SemanticType testType = this.stack.pop();
+    if (testType.match(this.typeInt)) {
+      cmd.getCommand().accept(this);
+      return;
+    }
+
+    logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Expressão de teste do IF deve ter tipo Int");
   }
 
   @Override
@@ -448,8 +479,9 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(ListCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    for (Command cmd : node.getCommands()) {
+      cmd.accept(this);
+    }
   }
 
   @Override
@@ -577,8 +609,7 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(ParenthesisPExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+    node.getExpression().accept(this); 
   }
 
   @Override
