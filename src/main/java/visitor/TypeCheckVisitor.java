@@ -347,8 +347,6 @@ public class TypeCheckVisitor extends Visitor {
 
     if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
-    } else if (right.match(typeBool) && left.match(typeBool)) {
-      this.stack.push(typeBool);
     }
     else {
       logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador < não se aplica aos tipos " + left.toString() + " e " + right.toString() );
