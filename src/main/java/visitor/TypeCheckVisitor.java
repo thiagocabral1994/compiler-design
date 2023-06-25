@@ -359,7 +359,11 @@ public class TypeCheckVisitor extends Visitor {
     for (Command cmd : function.getCommands()) {
       cmd.accept(this);
     }
-
+    
+    if (function.getReturnTypes().size() > 0 && !this.returnCheck) {
+      this.logError.add(function.getLine() + ", " + function.getCol() + ": Função " + function.getId()
+          + " deve retornar algum valor.");
+    }
 
   }
 
