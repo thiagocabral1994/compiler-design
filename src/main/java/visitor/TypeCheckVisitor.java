@@ -131,8 +131,17 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(AssignmentCommand cmd) {
+    Expression exp = cmd.getExpression();
     cmd.getExpression().accept(this);
     SemanticType expressionType = this.stack.pop();
+
+    // Caso expressionType seja nulo, podemos concluir que análise semântica que o dado
+    // Não foi inicializado.
+    if (exp instanceof LValueContext && expressionType.match(this.typeNull)) {
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível acessar valor de " + expressionType.toString());
+      this.stack.push(this.typeError);
+      return;
+    }
 
     LValueContext lvalueContext = cmd.getLValueContext();
     lvalueContext.accept(this);
@@ -224,44 +233,48 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(CallPExpression exp) {
     LocalEnv<SemanticType> localEnv = env.get(exp.getID());
-    if(localEnv != null){
-      STypeFunction typeFunction = (STypeFunction)localEnv.getFunctionType();
-      if(exp.getParamExpressions().size() == typeFunction.getParams().size()) {
-        int numParam = 0;
-        for (Expression e : exp.getParamExpressions()) {
-          e.accept(this);
-          if(!typeFunction.getParams().get(numParam).match(this.stack.pop())) {
-            logError.add( exp.getLine() + ", " + exp.getCol() + ": " + (numParam+1)+ "\u00BA argumento incompatível com o parâmetro de " + exp.getID());
-          }
-          numParam++;
-        }
-      }else {
-        logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função " + exp.getID() + " incompatível com argumentos. ");
-        this.stack.push(typeError);
+
+    if(localEnv == null){
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função não declarada: " + exp.getID());
+      this.stack.push(typeError);
+      return;
+    }
+
+    STypeFunction typeFunction = (STypeFunction)localEnv.getFunctionType();
+    if(exp.getParamExpressions().size() != typeFunction.getParams().size()) {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função " + exp.getID() + " incompatível com argumentos. ");
+      this.stack.push(typeError);
+      return;
+    }
+
+    int numParam = 0;
+    for (Expression e : exp.getParamExpressions()) {
+      e.accept(this);
+      if(!typeFunction.getParams().get(numParam).match(this.stack.pop())) {
+        logError.add( exp.getLine() + ", " + exp.getCol() + ": " + (numParam+1)+ "\u00BA argumento incompatível com o parâmetro de " + exp.getID());
       }
+      numParam++;
+    }
 
+    exp.getBracketExpression().accept(this);
 
-      exp.getBracketExpression().accept(this);
-      if(this.stack.pop().match(typeInt)) {
-        int index = this.indexStack.pop();
-        if (typeFunction.getReturnTypes().size() > index) {
-          SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
-          this.stack.push(returnIndexType);
-        }
-        else {
-          logError.add( exp.getLine() + ", " + exp.getCol() + ": Posição " + index + " de retorno da função " + exp.getID() + " não encontrada. ");
-          this.stack.push(typeError);
-        }
+    if(this.stack.pop().match(typeInt)) {
+      int index = this.indexStack.pop();
+      if (typeFunction.getReturnTypes().size() > index) {
+        SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
+        this.stack.push(returnIndexType);
       }
       else {
-        logError.add( exp.getLine() + ", " + exp.getCol() + ": Tipo de acesso ao retorno da função deve ser inteiro. ");
+        logError.add( exp.getLine() + ", " + exp.getCol() + ": Posição " + index + " de retorno da função " + exp.getID() + " não encontrada. ");
         this.stack.push(typeError);
+        return;
       }
     }
     else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função não declarada: " + exp.getID());
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Tipo de acesso ao retorno da função deve ser inteiro. ");
       this.stack.push(typeError);
     }
+
   }
 
 
@@ -278,7 +291,6 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(CustomBasicType type) {
     String name = type.getTypeName();
-
     if (!this.dataMap.containsKey(name)) {
       this.logError.add(type.getLine() + ", " + type.getCol() + ": Tipo " + type.getTypeName() + " não existe!");
       return;
@@ -351,7 +363,7 @@ public class TypeCheckVisitor extends Visitor {
     for (Command cmd : function.getCommands()) {
       cmd.accept(this);
     }
-    
+
     if (function.getReturnTypes().size() > 0 && !this.returnCheck) {
       this.logError.add(function.getLine() + ", " + function.getCol() + ": Função " + function.getId()
           + " deve retornar algum valor.");
@@ -378,8 +390,8 @@ public class TypeCheckVisitor extends Visitor {
     cmd.getExpression().accept(this);
     SemanticType testType = this.stack.pop();
     if (testType.match(this.typeBool)) {
-      this.returnCheck = false;
       cmd.getCommand().accept(this);
+      this.returnCheck = false;
       return;
     }
 
@@ -523,14 +535,20 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(NewPExpression exp) {
     exp.getType().accept(this);
-    SemanticType baseType = this.stack.pop();
-
-    if (baseType instanceof STypeError) {
+    
+    if(this.stack.empty()) {
       this.stack.push(this.typeError);
       return;
     }
 
+    SemanticType baseType = this.stack.pop();
     Expression arrayExpression = exp.getExpression();
+
+    if (baseType instanceof STypeError || (!this.dataMap.containsKey(baseType.toString()) && arrayExpression == null)) {
+      this.logError.add(exp.getLine() + ", " + exp.getCol() + ": Tipo " + baseType +" de data não existe!");
+      this.stack.push(this.typeError);
+      return;
+    }
 
     if (arrayExpression == null) {
       this.stack.push(baseType);
@@ -680,6 +698,7 @@ public class TypeCheckVisitor extends Visitor {
 
     int expectedAmountOfReturns = funcType.getReturnTypes().size();
     int actualAmountOfReturns = returnExpressions.size();
+
     if (actualAmountOfReturns != expectedAmountOfReturns) {
       this.stack.push(this.typeError);
       this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas retorna " + actualAmountOfReturns + " valores!");
@@ -687,7 +706,7 @@ public class TypeCheckVisitor extends Visitor {
     }
 
     List<SemanticType> argTypes = funcType.getParams();
-    for (int i = 0; i < returnExpressions.size(); i++) {
+    for (int i = 0; i < returnExpressions.size()-1; i++) {
       returnExpressions.get(i).accept(this);
       SemanticType expressionType = this.stack.pop();
       if (!argTypes.get(i).match(expressionType)) {
