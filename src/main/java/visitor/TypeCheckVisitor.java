@@ -172,9 +172,59 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(CallCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(CallCommand cmd) {
+    String id = cmd.getId();
+    LocalEnv<SemanticType> localEnv = this.env.get(id);
+
+    if(localEnv == null) {
+      this.stack.push(this.typeError);
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função " + id + " não existe!");
+      return;
+    }
+
+    STypeFunction scopeFunctionType = (STypeFunction) localEnv.getFunctionType();
+
+    int expectedAmountOfArgs = scopeFunctionType.getParams().size();
+    int actualAmountOfArgs = cmd.getExpressions().size();
+    if (expectedAmountOfArgs != actualAmountOfArgs) {
+      this.stack.push(this.typeError);
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfArgs + " argumentos, mas recebeu " + actualAmountOfArgs + " argumentos!");
+      return;
+    }
+
+    List<Expression> expressions = cmd.getExpressions();
+    List<SemanticType> argTypes = scopeFunctionType.getParams();
+    for (int i = 0; i < expressions.size(); i++) {
+      expressions.get(i).accept(this);
+      SemanticType expressionType = this.stack.pop();
+      if (!argTypes.get(i).match(expressionType)) {
+        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Argumento " + (i + 1) + " espera " + argTypes.get(i).toString() + " mas recebeu " + expressionType); 
+      }
+    }
+
+    int expectedAmountOfReturns = scopeFunctionType.getReturnTypes().size();
+    int actualAmountOfReturns = cmd.getReturnLValueContexts().size();
+    if (expectedAmountOfReturns != actualAmountOfReturns) {
+      this.stack.push(this.typeError);
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas recebeu " + actualAmountOfReturns + " retornos!");
+      return;
+    }
+
+    List<SemanticType> returnTypes = scopeFunctionType.getReturnTypes();
+    List<LValueContext> lvalueCtx = cmd.getReturnLValueContexts();
+    for (int i = 0; i < lvalueCtx.size(); i++) {
+      lvalueCtx.get(i).accept(this);
+      SemanticType lValueType = this.stack.pop();
+
+      if (lValueType.match(this.typeNull)) {
+        String headId = lvalueCtx.get(i).getLValue().getHeadId();
+        this.activeScope.set(headId, returnTypes.get(i));
+        this.stack.push(returnTypes.get(i));
+      } else if (!returnTypes.get(i).match(lValueType)) {
+        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível atribuir " + returnTypes.get(i).toString()
+            + " a " + lValueType.toString());
+      }
+    }
   }
 
   @Override
