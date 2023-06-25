@@ -24,6 +24,7 @@ public class TypeCheckVisitor extends Visitor {
   private Map<String, Map<String, SemanticType>> dataMap;
   private TypeEnv<LocalEnv<SemanticType>> env;
   private LocalEnv<SemanticType> activeScope;
+  private Stack<Integer> indexStack;
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
@@ -33,6 +34,7 @@ public class TypeCheckVisitor extends Visitor {
     this.env = new TypeEnv<>();
     this.logError = new ArrayList<>();
     this.dataMap = new HashMap<>();
+    this.indexStack = new Stack<>();
   }
 
   public int getNumErrors() {
@@ -228,10 +230,48 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(CallPExpression node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(CallPExpression exp) {
+    LocalEnv<SemanticType> localEnv = env.get(exp.getID());
+    if(localEnv != null){
+      STypeFunction typeFunction = (STypeFunction)localEnv.getFunctionType();
+      if(exp.getParamExpressions().size() == typeFunction.getParams().size()) {
+        int numParam = 0;
+        for (Expression e : exp.getParamExpressions()) {
+          e.accept(this);
+          if(!typeFunction.getParams().get(numParam).match(this.stack.pop())) {
+            logError.add( exp.getLine() + ", " + exp.getCol() + ": " + (numParam+1)+ "\u00BA argumento incompatível com o parâmetro de " + exp.getID());
+          }
+          numParam++;
+        }
+      }else {
+        logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função " + exp.getID() + " incompatível com argumentos. ");
+        this.stack.push(typeError);
+      }
+
+
+      exp.getBracketExpression().accept(this);
+      if(this.stack.pop().match(typeInt)) {
+        int index = this.indexStack.pop();
+        if (typeFunction.getReturnTypes().size() > index) {
+          SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
+          this.stack.push(returnIndexType);
+        }
+        else {
+          logError.add( exp.getLine() + ", " + exp.getCol() + ": Posição " + index + " de retorno da função " + exp.getID() + " não encontrada. ");
+          this.stack.push(typeError);
+        }
+      }
+      else {
+        logError.add( exp.getLine() + ", " + exp.getCol() + ": Tipo de acesso ao retorno da função deve ser inteiro. ");
+        this.stack.push(typeError);
+      }
+    }
+    else {
+      logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função não declarada: " + exp.getID());
+      this.stack.push(typeError);
+    }
   }
+
 
   @Override
   public void visit(CharSExpression exp) {
@@ -320,10 +360,7 @@ public class TypeCheckVisitor extends Visitor {
       cmd.accept(this);
     }
 
-    if (function.getReturnTypes().size() > 0 && !this.returnCheck) {
-      this.logError.add(function.getLine() + ", " + function.getCol() + ": Função " + function.getId()
-          + " deve retornar algum valor.");
-    }
+
   }
 
   @Override
@@ -379,6 +416,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(IntegerSExpression node) {
     this.stack.push(this.typeInt);
+    this.indexStack.push(node.getValue());
   }
 
   @Override

@@ -31,6 +31,6 @@ public class Teste{
                typeChecker.printErrors();
                throw new IOException("Erro na análise semântica");
           }
-          tree.accept(new InterpretVisitor(DEBUG));
+          // tree.accept(new InterpretVisitor(DEBUG));
      }
 }
