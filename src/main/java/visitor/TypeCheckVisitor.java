@@ -669,12 +669,6 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
 
-    if(!lValueType.match(this.typeChar)) {
-      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Comando read aceita apenas Char.");
-      this.stack.push(this.typeError);
-      return;
-    }
-
     this.stack.push(lValueType);
   }
 
