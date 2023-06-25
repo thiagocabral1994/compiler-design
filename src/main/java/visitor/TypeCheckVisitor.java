@@ -665,9 +665,25 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ReadCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(ReadCommand cmd) {
+    LValueContext lvalueContext = cmd.getLValue();
+    lvalueContext.accept(this);
+    SemanticType lValueType = this.stack.pop();
+
+    if (lValueType.match(this.typeNull)) {
+      String headId = lvalueContext.getLValue().getHeadId();
+      this.activeScope.set(headId, this.typeChar);
+      this.stack.push(this.typeChar);
+      return;
+    }
+
+    if(!lValueType.match(this.typeChar)) {
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Comando read aceita apenas Char.");
+      this.stack.push(this.typeError);
+      return;
+    }
+
+    this.stack.push(lValueType);
   }
 
   @Override
