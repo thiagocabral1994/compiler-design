@@ -206,7 +206,7 @@ public class TypeCheckVisitor extends Visitor {
 
     int expectedAmountOfReturns = scopeFunctionType.getReturnTypes().size();
     int actualAmountOfReturns = cmd.getReturnLValueContexts().size();
-    if (expectedAmountOfReturns != actualAmountOfReturns) {
+    if (actualAmountOfReturns > expectedAmountOfReturns) {
       this.stack.push(this.typeError);
       this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas recebeu " + actualAmountOfReturns + " retornos!");
       return;
@@ -671,9 +671,27 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   @Override
-  public void visit(ReturnCommand node) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'visit'");
+  public void visit(ReturnCommand cmd) {
+    this.returnCheck = true;
+    STypeFunction funcType = (STypeFunction) this.activeScope.getFunctionType();
+    List<Expression> returnExpressions = cmd.getReturnExpressions();
+
+    int expectedAmountOfReturns = funcType.getReturnTypes().size();
+    int actualAmountOfReturns = returnExpressions.size();
+    if (actualAmountOfReturns != expectedAmountOfReturns) {
+      this.stack.push(this.typeError);
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas retorna " + actualAmountOfReturns + " valores!");
+      return;
+    }
+
+    List<SemanticType> argTypes = funcType.getParams();
+    for (int i = 0; i < returnExpressions.size(); i++) {
+      returnExpressions.get(i).accept(this);
+      SemanticType expressionType = this.stack.pop();
+      if (!argTypes.get(i).match(expressionType)) {
+        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Retorno " + (i + 1) + " espera " + argTypes.get(i).toString() + " mas recebeu " + expressionType); 
+      }
+    }
   }
 
   @Override
