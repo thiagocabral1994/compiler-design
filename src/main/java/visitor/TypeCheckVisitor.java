@@ -24,7 +24,7 @@ public class TypeCheckVisitor extends Visitor {
   private Map<String, Map<String, SemanticType>> dataMap;
   private TypeEnv<LocalEnv<SemanticType>> env;
   private LocalEnv<SemanticType> activeScope;
-  private Stack<Integer> indexStack;
+  private int lastIndex;
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
@@ -34,7 +34,6 @@ public class TypeCheckVisitor extends Visitor {
     this.env = new TypeEnv<>();
     this.logError = new ArrayList<>();
     this.dataMap = new HashMap<>();
-    this.indexStack = new Stack<>();
   }
 
   public int getNumErrors() {
@@ -259,7 +258,7 @@ public class TypeCheckVisitor extends Visitor {
     exp.getBracketExpression().accept(this);
 
     if(this.stack.pop().match(typeInt)) {
-      int index = this.indexStack.pop();
+      int index = this.lastIndex;
       if (typeFunction.getReturnTypes().size() > index) {
         SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
         this.stack.push(returnIndexType);
@@ -449,7 +448,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(IntegerSExpression node) {
     this.stack.push(this.typeInt);
-    this.indexStack.push(node.getValue());
+    this.lastIndex = node.getValue();
   }
 
   @Override
