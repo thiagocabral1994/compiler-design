@@ -259,7 +259,7 @@ public class TypeCheckVisitor extends Visitor {
 
     if(this.stack.pop().match(typeInt)) {
       int index = this.lastIndex;
-      if (typeFunction.getReturnTypes().size() > index) {
+      if (index >= 0 && typeFunction.getReturnTypes().size() > index) {
         SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
         this.stack.push(returnIndexType);
       }
