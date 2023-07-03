@@ -4,12 +4,12 @@ src/main/java/parser/Parser.java:
 	java -jar antlr-4.8-complete.jar -no-listener -no-visitor src/main/java/parser/Parser.g4 
 
 compile : src/main/java/parser/Parser.java
-	find . -name "*.java" > javalist
-	javac -cp .:antlr-4.8-complete.jar @javalist
+	find src -name "*.java" > javalist
+	javac -cp .:ST-4.3.1.jar:antlr-4.8-complete.jar @javalist
 	rm -f javalist
 	
 run: compile
-	java -cp antlr-4.8-complete.jar:src/main/java Teste $(path)
+	java -cp ST-4.3.1.jar:antlr-4.8-complete.jar:src/main/java Teste $(path)
 
 clean: 
 	rm -fr src/main/java/parser/.antlr
