@@ -1,0 +1,136 @@
+group java;
+
+program(name, datas, functions, prefix) ::= <<
+package output;
+
+public class <prefix><name> {
+    <datas; separator="\n\n">
+
+    <functions; separator="\n\n">
+  
+    public static void main(String args[]) {
+        <prefix>main();
+    }
+}
+>>
+
+data(name, declarations, prefix) ::= <<
+static class <prefix><name> {
+    <declarations; separator=";\n">;
+}
+>>
+
+param(type, name, prefix) ::= "<type> <prefix><name>"
+
+function(type, name, prefix, params, declarations, commands) ::= <<
+private static <type> <prefix><name>(<params; separator=", ">) {
+    <if(declarations)><declarations; separator=";\n">;<endif>
+    <if(commands)><commands; separator="\n"><endif>
+}
+>>
+
+array_type(type) ::= "<type>[]"
+int_type() ::= "int"
+float_type() ::= "float"
+boolean_type() ::= "boolean"
+char_type() ::= "char"
+custom_type(name, prefix) ::= "<prefix><name>"
+
+print(exp) ::= "System.out.println(<exp>);"
+
+read_int(lvalue, scanner) ::= <<
+java.util.Scanner <scanner> = new java.util.Scanner(System.in);
+<lvalue> = <scanner>.nextInt();
+<scanner>.close();
+>>
+
+read_float(lvalue, scanner) ::= <<
+java.util.Scanner <scanner> = new java.util.Scanner(System.in);
+<lvalue> = <scanner>.nextFloat();
+<scanner>.close();
+>>
+
+read_bool(lvalue, scanner) ::= <<
+java.util.Scanner <scanner> = new java.util.Scanner(System.in);
+<lvalue> = <scanner>.nextBoolean();
+<scanner>.close();
+>>
+
+read_char(lvalue, scanner) ::= <<
+java.util.Scanner <scanner> = new java.util.Scanner(System.in);
+<lvalue> = <scanner>.next().charAt(0);
+<scanner>.close();
+>>
+
+return(exps, size, rv_count) ::= <<
+<if(exps)>Object[] returnValues<rv_count> = new Object[<size>];
+<exps:{exp | returnValues<rv_count>[<i0>] = <exp>;}; separator="\n">
+return returnValues<rv_count>;<endif>
+>>
+
+list_command(commands) ::= <<
+{
+    <if(commands)><commands; separator="\n"><endif>
+}
+>>
+
+if(exp, thn, els) ::= <<
+if(<exp>){
+    <thn>
+}<if(els)>else{
+    <els>
+}
+<endif>
+>>
+
+iterate(exp, thn, iterator) ::= <<
+for(int i<iterator> = 0; i<iterator> \< <exp>; i<iterator>++) {
+    <thn; separator=";\n">
+}
+>>
+
+assignment(lvalue, exp) ::= "<lvalue> = <exp>;"
+lvalue(name, prefix) ::= "<prefix><name>"
+array_lvalue(lvalue, exp) ::= "<lvalue>[<exp>]"
+object_lvalue(lvalue, name, prefix) ::= "<lvalue>.<prefix><name>"
+
+float_exp(value) ::= "<value>"
+int_exp(value) ::= "<value>"
+char_exp(value) ::= "'<value>'"
+null_exp() ::= "null"
+true_exp() ::= "true"
+false_exp() ::= "false"
+
+new_exp(type, exp, offset) ::= "new <type><if(exp)>[<exp>]<offset:{o | []}><else>()<endif>"
+
+call_void(name, args, prefix) ::= <<
+<prefix><name>(<args; separator=", ">);
+>>
+
+call_return(name, args, prefix, rv_count, call_return_assignments) ::= <<
+Object[] returnValues<rv_count> = <prefix><name>(<args; separator=", ">);
+<call_return_assignments; separator=";\n">;
+>>
+
+call_return_assignment(lvalue, rv_count, type, index) ::= <<
+<lvalue> = (<type>) returnValues<rv_count>[<index>]
+>>
+
+call_exp(name, args, prefix, exp, type) ::= <<
+(<type>) <prefix><name>(<args; separator=", ">)[<exp>]
+>>
+
+parenthesis_exp(exp) ::= "(<exp>)"
+
+mult_exp(left_exp, right_exp) ::= "(<left_exp> * <right_exp>)"
+div_exp(left_exp, right_exp) ::= "(<left_exp> / <right_exp>)"
+mod_exp(left_exp, right_exp) ::= "(<left_exp> % <right_exp>)"
+add_exp(left_exp, right_exp) ::= "(<left_exp> + <right_exp>)"
+sub_exp(left_exp, right_exp) ::= "(<left_exp> - <right_exp>)"
+
+lt_exp(left_exp, right_exp) ::= "(<left_exp> \< <right_exp>)"
+equals_exp(left_exp, right_exp) ::= "(<left_exp> == <right_exp>)"
+not_equals_exp(left_exp, right_exp) ::= "(<left_exp> != <right_exp>)"
+and_exp(left_exp, right_exp) ::= "(<left_exp> && <right_exp>)"
+not_exp(exp) ::= "!<exp>"
+neg_exp(exp) ::= "-<exp>"
