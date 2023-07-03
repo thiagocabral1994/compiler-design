@@ -1,6 +1,8 @@
 package util.semantic;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class TypeEnv<A> {
@@ -29,11 +31,14 @@ public class TypeEnv<A> {
   public String toString() {
     String string = "";
     Object[] obj = typeEnv.keySet().toArray();
-    for(int i = 0; i < obj.length; i++) {
+    for (int i = 0; i < obj.length; i++) {
       string += ((String) obj[i]) + " : " + typeEnv.get(obj[i]).toString() + "\n";
     }
 
     return string;
   }
-  
+
+  public Set<String> getKeys() {
+    return new HashSet<String>(this.typeEnv.keySet());
+  }
 }
