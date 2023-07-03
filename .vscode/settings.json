@@ -1,0 +1,6 @@
+{
+  "java.project.referencedLibraries": [
+      "antlr-4.8-complete.jar",
+      "ST-4.3.1.jar"
+  ]
+}
