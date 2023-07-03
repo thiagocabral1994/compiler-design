@@ -40,6 +40,9 @@ public class TypeCheckVisitor extends Visitor {
     return this.logError.size();
   }
 
+  public TypeEnv<LocalEnv<SemanticType>> getEnv() { return this.env; }
+  public Map<String, Map<String, SemanticType>> getDataMap() { return this.dataMap; }
+
   public void printErrors() {
     for (String string : this.logError) {
       System.out.println(string);
