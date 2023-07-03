@@ -704,8 +704,8 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
 
-    List<SemanticType> argTypes = funcType.getParams();
-    for (int i = 0; i < returnExpressions.size()-1; i++) {
+    List<SemanticType> argTypes = funcType.getReturnTypes();
+    for (int i = 0; i < returnExpressions.size(); i++) {
       returnExpressions.get(i).accept(this);
       SemanticType expressionType = this.stack.pop();
       if (!argTypes.get(i).match(expressionType)) {
