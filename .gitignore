@@ -5,5 +5,6 @@ ParserLexer.interp
 ParserLexer.java
 ParserLexer.tokens
 ParserParser.java
+output/
 
 *.class
