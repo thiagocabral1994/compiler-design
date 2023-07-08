@@ -1,0 +1,304 @@
+group jasmin
+
+program(name, datas, functions, prefix) ::= <<
+.source <prefix><name>
+.class public <prefix><name>
+.super java/lang/Object
+
+    <datas; separator="\n\n">
+
+    <functions; separator="\n\n">
+
+    .method public static main([Ljava/lang/String;)V
+        .limit stack 1
+        invokestatic <name>/<prefix>main()V
+        return
+    .end method
+>>
+
+data(name, declarations, prefix) ::= <<
+
+>>
+
+param(type, name, prefix) ::= 
+
+function(type, name, prefix, params, declarations, commands) ::= <<
+.method static <name>(<params>)<return>
+    .limit stack <stack>
+    .limit locals <declarations>
+    <commands>
+.end method
+>>
+
+array_type(type) ::= "[<type>"
+int_type() ::= "I"
+float_type() ::= "F"
+boolean_type() ::= "Z"
+char_type() ::= "C"
+custom_type(name, prefix) ::= "<prefix><name>"
+
+print_int(exp) ::= <<
+getstatic java/lang/System/out Ljava/io/PrintStream;
+<exp>
+invokervirtual java/io/PrintStream/print(I)V
+>>
+
+print_float(exp) ::= <<
+getstatic java/lang/System/out Ljava/io/PrintStream;
+<exp>
+invokervirtual java/io/PrintStream/print(F)V
+>>
+
+print_bool(exp) ::= <<
+getstatic java/lang/System/out Ljava/io/PrintStream;
+<exp>
+invokervirtual java/io/PrintStream/print(Z)V
+>>
+
+print_char(exp) ::= <<
+getstatic java/lang/System/out Ljava/io/PrintStream;
+<exp>
+invokervirtual java/io/PrintStream/print(C)V
+>>
+
+read_int(lvalue, scanner) ::= <<
+
+>>
+
+read_float(lvalue, scanner) ::= <<
+
+>>
+
+read_bool(lvalue, scanner) ::= <<
+
+>>
+
+read_char(lvalue, scanner) ::= <<
+
+>>
+
+return_int(exp) ::= <<
+<exp>
+ireturn 
+>>
+
+return_float(exp) ::= <<
+<exp>
+freturn 
+>>
+
+return_bool(exp) ::= <<
+<exp>
+zreturn 
+>>
+
+return_char(exp) ::= <<
+<exp>
+creturn 
+>>
+
+list_command(commands) ::= <<
+{
+    <if(commands)><commands; separator="\n"><endif>
+}
+>>
+
+if(num, exp, thn, els) ::= <<
+<exp>
+ifeq #<num>
+<thn>
+goto #<num>#end
+#<num>:
+<els>
+#<num>#end:
+nop
+>>
+
+iterate(exp, thn, iterator) ::= <<
+
+>>
+
+assignment_int(lvalue, exp) ::= <<
+<exp>
+istore <lvalue>
+>>
+
+assignment_float(lvalue, exp) ::= <<
+<exp>
+fstore <lvalue>
+>>
+
+assignment_bool(lvalue, exp) ::= <<
+<exp>
+zstore <lvalue>
+>>
+
+assignment_char(lvalue, exp) ::= <<
+<exp>
+cstore <lvalue>
+>>
+
+lvalue(name, prefix) ::= 
+array_lvalue(lvalue, exp) ::= 
+object_lvalue(lvalue, name, prefix) ::=
+
+float_exp(value) ::= "ldc <value>"
+int_exp(value) ::= "sipush <value>"
+char_exp(value) ::= "ldc '<value>'"
+null_exp() ::= "aconst_null"
+true_exp() ::= "iconst_1"
+false_exp() ::= "iconst_0"
+
+new_exp(type, exp, offset) ::=
+
+call_void(class, func_name, args, args_types, prefix) ::= <<
+<args; separator="\n">
+invokestatic <prefix><class>/<prefix><func_name>(args_types)V
+>>
+
+call_return(name, args, prefix, rv_count, call_return_assignments) ::= <<
+
+>>
+
+call_return_assignment(lvalue, rv_count, type, index) ::= <<
+
+>>
+
+call_exp(class, func_name, args, args_types, prefix, return_type) ::= <<
+<args; separator="\n">
+invokestatic <prefix><class>/<prefix><func_name>(args_types)<return_type>
+>>
+
+parenthesis_exp(exp) ::= 
+
+mult_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+imul
+>>
+
+mult_float(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+fmul
+>>
+
+div_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+idiv
+>>
+
+mod_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+irem
+>>
+
+add_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+iadd
+>>
+
+sub_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+isub
+>>
+
+lt_int(num, left_exp, right_exp) ::= <<
+<right_exp>
+<left_exp>
+isub
+ifgt #<num>
+iconst_0
+goto #<num>#<num>
+#<num>:
+iconst_1
+#<num>#<num>:
+>>
+
+lt_float(num, left_exp, right_exp) ::= <<
+<right_exp>
+<left_exp>
+fsub
+ifgt #<num>
+iconst_0
+goto #<num>#<num>
+#<num>:
+iconst_1
+#<num>#<num>:
+>>
+
+equals_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+isub
+ifeq #<num>
+iconst_0
+goto #<num>#<num>
+#<num>:
+iconst_1
+#<num>#<num>:
+>>
+
+equals_float(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+fsub
+ifeq #<num>
+iconst_0
+goto #<num>#<num>
+#<num>:
+iconst_1
+#<num>#<num>:
+>>
+
+not_equals_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+isub
+ifeq #<num>
+iconst_1
+goto #<num>#<num>
+#<num>:
+iconst_0
+#<num>#<num>:
+>>
+
+not_equals_float(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+fsub
+ifeq #<num>
+iconst_1
+goto #<num>#<num>
+#<num>:
+iconst_0
+#<num>#<num>:
+>>
+
+and_exp(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+iand
+>>
+
+not_exp(exp) ::= <<
+<exp>
+iconst_1
+ixor
+>>
+
+neg_int(exp) ::= <<
+<exp>
+iconst_0
+isub
+>>
+
+neg_float(exp) ::= <<
+<exp>
+fconst_0
+fsub
+>>
