@@ -2,7 +2,7 @@ group jasmin
 
 program(name, datas, functions, prefix) ::= <<
 .source <prefix><name>
-.class public <prefix><name>
+.class public output.<prefix><name>
 .super java/lang/Object
 
     <datas; separator="\n\n">
@@ -11,22 +11,30 @@ program(name, datas, functions, prefix) ::= <<
 
     .method public static main([Ljava/lang/String;)V
         .limit stack 1
-        invokestatic <name>/<prefix>main()V
+        invokestatic output/<prefix><name>/<prefix>main()V
         return
     .end method
+
 >>
 
 data(name, declarations, prefix) ::= <<
-
+.class public static <prefix><name>
+.super java/lang/Object
+    <declarations; separator=";\n">
+.end class
 >>
 
-param(type, name, prefix) ::= 
+field(type, name, prefix) ::= ".field public <prefix><name> <type>"
+param(type) ::= "<type>"
 
 function(type, name, prefix, params, declarations, commands) ::= <<
-.method static <name>(<params>)<return>
+.method static <prefix><name>(<params>)<return>
     .limit stack <stack>
     .limit locals <declarations>
-    <commands>
+    
+    <if(commands)><commands; separator="\n\n"><endif>
+
+    <if(type == "V")>return<endif>
 .end method
 >>
 
@@ -35,7 +43,7 @@ int_type() ::= "I"
 float_type() ::= "F"
 boolean_type() ::= "Z"
 char_type() ::= "C"
-custom_type(name, prefix) ::= "<prefix><name>"
+custom_type(name, prefix) ::= "Loutput/<prefix><name>"
 
 print_int(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
@@ -62,45 +70,64 @@ invokervirtual java/io/PrintStream/print(C)V
 >>
 
 read_int(lvalue, scanner) ::= <<
-
+    new java/util/Scanner      
+    invokespecial java/util/Scanner/<init>()V 
+    astore <scanner>
+    aload <scanner
+    invokevirtual java/util/Scanner/nextInt()I
+    istore <lvalue>
 >>
+
 
 read_float(lvalue, scanner) ::= <<
-
+    new java/util/Scanner
+    invokespecial java/util/Scanner/<init>()V
+    astore <scanner>
+    aload <scanner>
+    invokevirtual java/util/Scanner/nextFloat()F
+    fstore <lvalue>
 >>
+
 
 read_bool(lvalue, scanner) ::= <<
-
+    new java/util/Scanner
+    invokespecial java/util/Scanner/<init>()V
+    astore <scanner>
+    aload <scanner>
+    invokevirtual java/util/Scanner/nextBoolean()Z
+    istore <lvalue> 
 >>
+
 
 read_char(lvalue, scanner) ::= <<
-
+    new java/util/Scanner
+    invokespecial java/util/Scanner/<init>()V
+    astore <scanner>
+    aload <scanner>
+    invokevirtual java/util/Scanner/next()Ljava/lang/String;
+    iconst_0
+    invokevirtual java/lang/String/charAt(I)C
+    istore <lvalue>
 >>
 
-return_int(exp) ::= <<
-<exp>
-ireturn 
->>
+return(exps, size, rv_count) ::= <<
+ldc <size>
+anewarray java/lang/Object
+astore_0 
 
-return_float(exp) ::= <<
+<exps: { exp | 
+aload_0
+iconst_<i0>
 <exp>
-freturn 
->>
+aastore
+}; separator="\n\n">
 
-return_bool(exp) ::= <<
-<exp>
-zreturn 
->>
-
-return_char(exp) ::= <<
-<exp>
-creturn 
+aload_0
+areturn
 >>
 
 list_command(commands) ::= <<
-{
-    <if(commands)><commands; separator="\n"><endif>
-}
+<if(commands)><commands; separator="\n"><endif>
 >>
 
 if(num, exp, thn, els) ::= <<
@@ -115,7 +142,18 @@ nop
 >>
 
 iterate(exp, thn, iterator) ::= <<
+iconst_0
+istore i<iterator>
 
+#start_loop:
+iload i<iterator>
+bipush <exp>
+if_icmpge #end_loop
+<thn>
+iinc i<iterator> 1
+goto #start_loop
+
+#end_loop
 >>
 
 assignment_int(lvalue, exp) ::= <<
@@ -128,19 +166,17 @@ assignment_float(lvalue, exp) ::= <<
 fstore <lvalue>
 >>
 
-assignment_bool(lvalue, exp) ::= <<
-<exp>
-zstore <lvalue>
+lvalue(name, prefix) ::= "<prefix><name>"
+array_lvalue(lvalue, exp) ::= <<
+    <exp>
+    <lvalue>
+    iadd
 >>
 
-assignment_char(lvalue, exp) ::= <<
-<exp>
-cstore <lvalue>
+object_lvalue(lvalue, name, prefix) ::= <<
+aload <lvalue>
+getfield <prefix><name>
 >>
-
-lvalue(name, prefix) ::= 
-array_lvalue(lvalue, exp) ::= 
-object_lvalue(lvalue, name, prefix) ::=
 
 float_exp(value) ::= "ldc <value>"
 int_exp(value) ::= "sipush <value>"
