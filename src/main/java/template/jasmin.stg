@@ -2,7 +2,7 @@ group jasmin
 
 program(name, datas, functions, prefix) ::= <<
 .source <prefix><name>
-.class public <prefix><name>
+.class public output/<prefix><name>
 .super java/lang/Object
 
     <datas; separator="\n\n">
