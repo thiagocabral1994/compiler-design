@@ -304,6 +304,10 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(Data data) {
     Map<String, SemanticType> declarationsMap = new HashMap<>();
 
+    if (this.dataMap.containsKey(data.getId())) {
+      this.logError.add(data.getLine() + ", " + data.getCol() + ": Tipo " + data.getId() + " duplicado!");
+      return;
+    }
     this.dataMap.put(data.getId(), declarationsMap);
 
     for (Parameter declaration : data.getDeclarations()) {
