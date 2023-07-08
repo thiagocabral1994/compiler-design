@@ -36,7 +36,7 @@ boolean_type() ::= "boolean"
 char_type() ::= "char"
 custom_type(name, prefix) ::= "<prefix><name>"
 
-print(exp) ::= "System.out.println(<exp>);"
+print(exp) ::= "System.out.print(<exp>);"
 
 read_int(lvalue, scanner) ::= <<
 java.util.Scanner <scanner> = new java.util.Scanner(System.in);
