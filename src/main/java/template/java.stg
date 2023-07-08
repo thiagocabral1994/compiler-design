@@ -69,9 +69,7 @@ return returnValues<rv_count>;<endif>
 >>
 
 list_command(commands) ::= <<
-{
-    <if(commands)><commands; separator="\n"><endif>
-}
+<if(commands)><commands; separator="\n"><endif>
 >>
 
 if(exp, thn, els) ::= <<
@@ -84,7 +82,8 @@ if(<exp>){
 >>
 
 iterate(exp, thn, iterator) ::= <<
-for(int i<iterator> = 0; i<iterator> \< <exp>; i<iterator>++) {
+int maxI<iterator> = <exp>;
+for(int i<iterator> = 0; i<iterator> \< maxI<iterator>; i<iterator>++) {
     <thn; separator=";\n">
 }
 >>
