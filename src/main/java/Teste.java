@@ -48,11 +48,29 @@ public class Teste {
                throw new IOException("Erro na análise semântica");
           }
 
-          JavaVisitor javaVisitor = new JavaVisitor(OUTPUT_NAME, typeChecker.getEnv(), typeChecker.getDataMap());
-          tree.accept(javaVisitor);
-
-          String generatedCode = javaVisitor.getProgramTemplate();
-          writeProgram(generatedCode, "_" + OUTPUT_NAME + ".java");
+          String generatedCode;
+          switch (args[1]) {
+               case "i":
+                    InterpretVisitor interpretVisitor = new InterpretVisitor();
+                    tree.accept(interpretVisitor);
+                    break;
+               case "j":
+                    JasminVisitor jasminVisitor = new JasminVisitor(OUTPUT_NAME, typeChecker.getEnv(),
+                              typeChecker.getDataMap());
+                    tree.accept(jasminVisitor);
+                    generatedCode = jasminVisitor.getProgramTemplate();
+                    writeProgram(generatedCode, "_" + OUTPUT_NAME + ".j");
+                    break;
+               case "s":
+                    JavaVisitor javaVisitor = new JavaVisitor(OUTPUT_NAME, typeChecker.getEnv(),
+                              typeChecker.getDataMap());
+                    tree.accept(javaVisitor);
+                    generatedCode = javaVisitor.getProgramTemplate();
+                    writeProgram(generatedCode, "_" + OUTPUT_NAME + ".java");
+                    break;
+               default:
+                    throw new IOException("É necessário escolher uma forma de execução: -i, -s ou -j.");
+          }
      }
 
      private static void writeProgram(String content, String fileName) {

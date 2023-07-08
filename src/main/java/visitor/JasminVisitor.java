@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.Stack;
 
-public class JavaVisitor extends Visitor {
+public class JasminVisitor extends Visitor {
 	private static final String PREFIX = "_";
 	private STGroup groupTemplate;
 	private ST programTemplate, typeTemplate, commandTemplate;
@@ -34,8 +34,8 @@ public class JavaVisitor extends Visitor {
 	private Map<String, Map<String, SemanticType>> dataMap;
 	private Stack<SemanticType> lvalueTypeStack;
 
-	public JavaVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
-		this.groupTemplate = new STGroupFile("./template/java.stg");
+	public JasminVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
+		this.groupTemplate = new STGroupFile("./template/jasmin.stg");
 		this.fileName = fileName;
 		this.env = env;
 		this.expressionTemplateStack = new Stack<ST>();
@@ -57,13 +57,13 @@ public class JavaVisitor extends Visitor {
 
 		this.dataTemplates = new ArrayList<ST>();
 		for (Data data : program.getDatas()) {
-			data.accept(this);
+			// data.accept(this);
 		}
 		this.programTemplate.add("datas", this.dataTemplates);
 
 		this.functionTemplates = new ArrayList<ST>();
 		for (Function function : program.getFunctions()) {
-			function.accept(this);
+			// function.accept(this);
 		}
 		this.programTemplate.add("functions", this.functionTemplates);
 	}
