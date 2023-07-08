@@ -1,6 +1,7 @@
 package visitor;
 
 import ast.*;
+import util.Pair;
 import util.semantic.*;
 
 import org.stringtemplate.v4.ST;
@@ -25,15 +26,15 @@ public class JavaVisitor extends Visitor {
 	private int returnCount = 0;
 	private int scannerCount = 0;
 	private int lastIndex;
-	private LocalEnv<SemanticType> localEnv;
+	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 
 	private String fileName;
 
-	private TypeEnv<LocalEnv<SemanticType>> env;
+	private Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env;
 	private Map<String, Map<String, SemanticType>> dataMap;
 	private Stack<SemanticType> lvalueTypeStack;
 
-	public JavaVisitor(String fileName, TypeEnv<LocalEnv<SemanticType>> env, Map<String, Map<String, SemanticType>> map) {
+	public JavaVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
 		this.groupTemplate = new STGroupFile("./template/java.stg");
 		this.fileName = fileName;
 		this.env = env;
@@ -125,9 +126,18 @@ public class JavaVisitor extends Visitor {
 	@Override
 	public void visit(CallCommand cmd) {
 		ST cmdTemplate;
+		List<ST> localParamTemplates = new ArrayList<>();
+		List<SemanticType> paramTypes = new ArrayList<>();
+		for (Expression arg : cmd.getExpressions()) {
+			arg.accept(this);
+			paramTypes.add(arg.getSemanticType());
+			localParamTemplates.add(this.expressionTemplateStack.pop());
+		}
+
 		if (cmd.getReturnLValueContexts().size() > 0) {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_return");
-			STypeFunction sTyFunc = (STypeFunction) this.env.get(cmd.getId()).getFunctionType();
+			STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), paramTypes);
+			STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 			List<ST> callAssigments = new ArrayList<ST>();
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
 				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_assignment");
@@ -148,13 +158,7 @@ public class JavaVisitor extends Visitor {
 
 		cmdTemplate.add("prefix", PREFIX);
 		cmdTemplate.add("name", cmd.getId());
-
-		List<ST> paramTemplates = new ArrayList<ST>();
-		for (Expression arg : cmd.getExpressions()) {
-			arg.accept(this);
-			paramTemplates.add(this.expressionTemplateStack.pop());
-		}
-		cmdTemplate.add("args", paramTemplates);
+		cmdTemplate.add("args", localParamTemplates);
 
 		this.commandTemplate = cmdTemplate;
 	}
@@ -166,8 +170,10 @@ public class JavaVisitor extends Visitor {
 		expressionTemplate.add("prefix", PREFIX);
 
 		List<ST> paramTemplates = new ArrayList<ST>();
+		List<SemanticType> paramTypes = new ArrayList<>();
 		for (Expression arg : exp.getParamExpressions()) {
 			arg.accept(this);
+			paramTypes.add(arg.getSemanticType());
 			paramTemplates.add(this.expressionTemplateStack.pop());
 		}
 		expressionTemplate.add("args", paramTemplates);
@@ -175,7 +181,8 @@ public class JavaVisitor extends Visitor {
 		exp.getBracketExpression().accept(this);
 		expressionTemplate.add("exp", this.expressionTemplateStack.pop());
 
-		STypeFunction sTyFunc = (STypeFunction) this.env.get(exp.getID()).getFunctionType();
+		STypeFunctionKey functionKey = STypeFunctionKey.create(exp.getID(), paramTypes);
+		STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 		this.processSemanticType(sTyFunc.getReturnTypes().get(this.lastIndex));
 		expressionTemplate.add("type", this.typeTemplate);
 
@@ -267,7 +274,8 @@ public class JavaVisitor extends Visitor {
 		functionTemplate.add("name", function.getId());
 		functionTemplate.add("prefix", PREFIX);
 
-		this.localEnv = env.get(function.getId());
+		STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), function.getFunctionType().getParams());
+		this.localEnv = this.env.get(functionKey);
 
 		List<Type> returnTypes = function.getReturnTypes();
 		// TODO: Encapsular isso pro Jasmin e Java;
@@ -286,7 +294,7 @@ public class JavaVisitor extends Visitor {
 			ST paramTemplate = groupTemplate.getInstanceOf("param");
 			paramTemplate.add("name", key);
 			paramTemplate.add("prefix", PREFIX);
-			SemanticType sType = this.localEnv.get(key);
+			SemanticType sType = this.localEnv.get(key).getLeft();
 			this.processSemanticType(sType);
 			paramTemplate.add("type", this.typeTemplate);
 			this.paramTemplates.add(paramTemplate);
@@ -305,7 +313,7 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(IdentifierLValue lvalue) {
-		SemanticType lvalueType = this.localEnv.get(lvalue.getID());
+		SemanticType lvalueType = this.localEnv.get(lvalue.getID()).getLeft();
 
 		ST lvalueTemplate = groupTemplate.getInstanceOf("lvalue");
 		lvalueTemplate.add("name", lvalue.getID());
