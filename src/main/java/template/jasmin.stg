@@ -42,7 +42,7 @@ function_void(name, prefix, params, locals, commands, stack) ::= <<
 >>
 
 function(name, prefix, params, locals, commands, stack) ::= <<
-.method static <prefix><name>(<params>)[Ljava/lang/Object
+.method static <prefix><name>(<params>)[Ljava/lang/Object;
     .limit stack <stack>
     .limit locals <locals>
     
@@ -141,17 +141,36 @@ invokevirtual java/util/Scanner/close()V
 return(exps, size, size_label) ::= <<
 iconst_<size>
 anewarray java/lang/Object
-astore_<size_label> 
+astore <size_label> 
 
-<exps: { exp | 
-aload_<size_label>
-iconst_<i0>
-<exp>
-aastore
-}; separator="\n\n">
+<exps; separator="\n\n">
 
-aload_<size_label>
+aload <size_label>
 areturn
+>>
+
+return_attr(size_label, index, exp, return_attr_type) ::= <<
+aload <size_label>
+iconst_<index>
+<exp>
+<return_attr_type>
+aastore
+>>
+
+return_attr_int() ::= <<
+invokestatic java/lang/Integer/valueOf(I)Ljava/lang/Integer;
+>>
+
+return_attr_char() ::= <<
+invokestatic java/lang/Character/valueOf(C)Ljava/lang/Character;
+>>
+
+return_attr_bool() ::= <<
+invokestatic java/lang/Boolean/valueOf(Z)Ljava/lang/Boolean;
+>>
+
+return_attr_float() ::= <<
+invokestatic java/lang/Float/valueOf(F)Ljava/lang/Float;
 >>
 
 list_command(commands) ::= <<
@@ -255,9 +274,37 @@ call_return_assignment(declarations, class, lvalue, func_name, params_types, pre
 
 >>
 
-call_exp(class, func_name, args, args_types, prefix, return_types) ::= <<
+call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= <<
+; Carregando os argumentos do método
 <args; separator="\n">
-invokestatic <prefix><class>/<prefix><func_name>(args_types)[Ljava/lang/Object
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)<return_type>
+
+; Atribuição do retorno da função
+iconst_<exp>
+aaload
+<cast>
+>>
+
+cast_char() ::= <<
+checkcast java/lang/Character
+invokevirtual java/lang/Character/charValue()C
+>>
+
+cast_int() ::= <<
+checkcast java/lang/Integer
+invokevirtual java/lang/Integer/intValue()I
+>>
+
+cast_float() ::= <<
+checkcast java/lang/Float
+invokevirtual java/lang/Float/floatValue()F
+>>
+
+cast_bool() ::= <<
+checkcast java/lang/Boolean
+invokevirtual java/lang/Boolean/booleanValue()Z
 >>
 
 parenthesis_exp(exp) ::= <<>>

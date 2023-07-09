@@ -283,6 +283,7 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunction typeFunction = localEnv.getFunctionType();
     if (this.stack.pop().match(typeInt)) {
       int index = this.lastIndex;
+      exp.setIndex(index);
       if (index >= 0 && typeFunction.getReturnTypes().size() > index) {
         SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
         this.stack.push(returnIndexType);
@@ -401,6 +402,7 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), paramTypes);
 
     this.activeScope = env.get(functionKey);
+    this.intCount = 0;
     for (int i = 0; i < function.getParameters().size(); i++) {
       this.activeScope.set(function.getParameters().get(i).getId(), new Pair<>(paramTypes.get(i), this.intCount++));
     }
