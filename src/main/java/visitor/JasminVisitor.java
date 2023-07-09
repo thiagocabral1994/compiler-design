@@ -27,6 +27,7 @@ public class JasminVisitor extends Visitor {
 	private int scannerCount = 0;
 	private int lastIndex;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
+	private Stack<Pair<SemanticType, Integer>> lvaluePairStack;
 
 	private String fileName;
 
@@ -42,6 +43,7 @@ public class JasminVisitor extends Visitor {
 		this.expressionTemplateStack = new Stack<ST>();
 		this.dataMap = map;
 		this.lvalueTypeStack = new Stack<SemanticType>();
+		this.lvaluePairStack = new Stack<>();
 	}
 
 	public String getProgramTemplate() throws IOException {
@@ -110,10 +112,25 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(AssignmentCommand command) {
-		ST localCommandTemplate = this.groupTemplate.getInstanceOf("assignment");
+		Expression exp = command.getExpression();
+		SemanticType expType = exp.getSemanticType();
+		String  attrRef;
+		if (expType instanceof STypeInt) {
+			attrRef = "assignment_int";
+		} else if (expType instanceof STypeFloat) {
+			attrRef = "assignment_float";
+		} else if (expType instanceof STypeChar) {
+			attrRef = "assignment_char";
+		} else {
+			attrRef = "assignment_bool";
+		}
+		ST localCommandTemplate = this.groupTemplate.getInstanceOf(attrRef);
 		command.getLValueContext().accept(this);
-		localCommandTemplate.add("lvalue", this.expressionTemplateStack.pop());
-		command.getExpression().accept(this);
+		Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
+		ST lvalueLabelTemplate = this.groupTemplate.getInstanceOf("lvalue_label");
+		lvalueLabelTemplate.add("label", pair.getRight());
+		localCommandTemplate.add("lvalue", lvalueLabelTemplate);
+		exp.accept(this);
 		localCommandTemplate.add("exp", this.expressionTemplateStack.pop());
 		this.commandTemplate = localCommandTemplate;
 	}
@@ -298,13 +315,23 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(IdentifierLValue lvalue) {
-		SemanticType lvalueType = this.localEnv.get(lvalue.getID()).getLeft();
-
-		ST lvalueTemplate = groupTemplate.getInstanceOf("lvalue");
-		lvalueTemplate.add("name", lvalue.getID());
-		lvalueTemplate.add("prefix", PREFIX);
-		this.expressionTemplateStack.push(lvalueTemplate);
-		this.lvalueTypeStack.push(lvalueType);
+		Pair<SemanticType, Integer> pair = this.localEnv.get(lvalue.getID());
+		this.lvaluePairStack.push(pair);
+		SemanticType type = pair.getLeft();
+		Integer label = pair.getRight();
+		String  lvalueRef;
+		if (type instanceof STypeInt) {
+			lvalueRef = "lvalue_int";
+		} else if (type instanceof STypeFloat) {
+			lvalueRef = "lvalue_float";
+		} else if (type instanceof STypeChar) {
+			lvalueRef = "lvalue_char";
+		} else {
+			lvalueRef = "lvalue_bool";
+		}
+		ST template = this.groupTemplate.getInstanceOf(lvalueRef);
+		template.add("label", label);
+		this.expressionTemplateStack.push(template);
 	}
 
 	@Override

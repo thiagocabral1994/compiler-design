@@ -176,7 +176,8 @@ public class TypeCheckVisitor extends Visitor {
     // Não foi inicializado.
     if (lValueType.match(this.typeNull)) {
       String headId = lvalueContext.getLValue().getHeadId();
-      this.activeScope.set(headId, new Pair<>(expressionType, this.intCount++));
+      Pair<SemanticType, Integer> pair = this.activeScope.get(headId);
+      this.activeScope.set(headId, new Pair<>(expressionType, pair.getRight()));
       this.stack.push(expressionType);
       return;
     }
@@ -420,12 +421,16 @@ public class TypeCheckVisitor extends Visitor {
     String id = lvalue.getID();
     Pair<SemanticType, Integer> lvalueTypePair = this.activeScope.get(id);
 
-    if (lvalueTypePair == null || lvalueTypePair.getLeft().match(this.typeNull)) {
+    if (lvalueTypePair == null) {
       this.activeScope.set(id, new Pair<>(this.typeNull, this.intCount++));
       this.stack.push(this.typeNull);
       lvalue.setSemanticType(typeNull);
+    } else if (lvalueTypePair.getLeft().match(this.typeNull)) {
+      this.activeScope.set(id, new Pair<>(this.typeNull, lvalueTypePair.getRight()));
+      this.stack.push(this.typeNull);
+      lvalue.setSemanticType(typeNull);
     } else {
-      this.activeScope.set(id, new Pair<>(lvalueTypePair.getLeft(), this.intCount++));
+      this.activeScope.set(id, new Pair<>(lvalueTypePair.getLeft(), lvalueTypePair.getRight()));
       this.stack.push(lvalueTypePair.getLeft());
       lvalue.setSemanticType(lvalueTypePair.getLeft());
     }
@@ -694,7 +699,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(PrintCommand cmd) {
     cmd.getExpression().accept(this);
-    this.testMaxSize(this.stack.size() + 1);
+    this.testMaxSize(this.stack.size() > 1 ? this.stack.size() : 2);
     this.stack.pop();
   }
 

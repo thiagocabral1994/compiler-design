@@ -194,7 +194,34 @@ assignment_float(lvalue, exp) ::= <<
 fstore_<lvalue>
 >>
 
-lvalue(name, prefix) ::= "<prefix><name>"
+assignment_char(lvalue, exp) ::= <<
+<exp>
+istore_<lvalue>
+>>
+
+assignment_bool(lvalue, exp) ::= <<
+<exp>
+istore_<lvalue>
+>>
+
+lvalue_label(label) ::= "<label>"
+
+lvalue_int(label) ::= <<
+iload_<label>
+>>
+
+lvalue_float(label) ::= <<
+fload_<label>
+>>
+
+lvalue_bool(label) ::= <<
+iload_<label>
+>>
+
+lvalue_char(label) ::= <<
+iload_<label>
+>>
+
 array_lvalue(lvalue, exp) ::= <<
     <exp>
     <lvalue>
@@ -213,7 +240,7 @@ null_exp() ::= "aconst_null"
 true_exp() ::= "iconst_1"
 false_exp() ::= "iconst_0"
 
-new_exp(type, exp, offset) ::=
+new_exp(type, exp, offset) ::= <<>>
 
 call_void(class, func_name, args, args_types, prefix) ::= <<
 <args; separator="\n">
@@ -233,7 +260,7 @@ call_exp(class, func_name, args, args_types, prefix, return_types) ::= <<
 invokestatic <prefix><class>/<prefix><func_name>(args_types)[Ljava/lang/Object
 >>
 
-parenthesis_exp(exp) ::= 
+parenthesis_exp(exp) ::= <<>>
 
 mult_int(left_exp, right_exp) ::= <<
 <left_exp>
