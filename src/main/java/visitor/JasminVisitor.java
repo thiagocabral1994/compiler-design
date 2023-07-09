@@ -26,6 +26,8 @@ public class JasminVisitor extends Visitor {
 	private int ifCount = 0;
 	private int returnCount = 0;
 	private int lessCount = 0;
+	private int eqCount = 0;
+	private int notEqCount = 0;
 	private int lastIndex;
 	private int scannerCount = 0;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
@@ -80,15 +82,12 @@ public class JasminVisitor extends Visitor {
 		SemanticType expType = exp.getSemanticType();
 		String  attrRef;
 
-		if (expType instanceof STypeInt) {
-			attrRef = "add_int";
-		} else if (expType instanceof STypeFloat) {
+		if (expType instanceof STypeFloat) {
 			attrRef = "add_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "add_int";
 		} else {
-			attrRef = "add_bool";
+			attrRef = "add_int";
 		}
+
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 
 		exp.getLeft().accept(this);
@@ -321,14 +320,10 @@ public class JasminVisitor extends Visitor {
 		SemanticType expType = exp.getSemanticType();
 		String  attrRef;
 
-		if (expType instanceof STypeInt) {
-			attrRef = "div_int";
-		} else if (expType instanceof STypeFloat) {
+		if (expType instanceof STypeFloat) {
 			attrRef = "div_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "div_int";
 		} else {
-			attrRef = "div_bool";
+			attrRef = "div_int";
 		}
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 
@@ -352,12 +347,28 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(EqualityRExpression exp) {
+		this.eqCount++;
 		ST expressionTemplate = groupTemplate.getInstanceOf("equals_exp");
+
+		expressionTemplate.add("num", this.eqCount);
+
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
+
+		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
+		if (pairL.getLeft() instanceof STypeInt  || pairL.getLeft() instanceof STypeChar){
+			expressionTemplate.add("convertL", "i2f");
+		}
+		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
+
+		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
+		if (pairR.getLeft() instanceof STypeInt || pairR.getLeft() instanceof STypeChar){
+			expressionTemplate.add("convertR", "i2f");
+		}
 		this.expressionTemplateStack.push(expressionTemplate);
+		this.eqCount++;
 	}
 
 	@Override
@@ -461,12 +472,28 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(InequalityRExpression exp) {
+		this.notEqCount++;
 		ST expressionTemplate = groupTemplate.getInstanceOf("not_equals_exp");
+
+		expressionTemplate.add("num", this.notEqCount);
+
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
+
+		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
+		if (pairL.getLeft() instanceof STypeInt  || pairL.getLeft() instanceof STypeChar){
+			expressionTemplate.add("convertL", "i2f");
+		}
+		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
+
+		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
+		if (pairR.getLeft() instanceof STypeInt || pairR.getLeft() instanceof STypeChar){
+			expressionTemplate.add("convertR", "i2f");
+		}
 		this.expressionTemplateStack.push(expressionTemplate);
+		this.eqCount++;
 	}
 
 	@Override
@@ -497,8 +524,6 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(LessRExpression exp) {
 		this.lessCount++;
-
-
 		ST expressionTemplate = groupTemplate.getInstanceOf("lt_exp");
 		expressionTemplate.add("num", this.lessCount);
 
@@ -538,14 +563,10 @@ public class JasminVisitor extends Visitor {
 		SemanticType expType = exp.getSemanticType();
 		String  attrRef;
 
-		if (expType instanceof STypeInt) {
-			attrRef = "mod_int";
-		} else if (expType instanceof STypeFloat) {
+		if (expType instanceof STypeFloat) {
 			attrRef = "mod_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "mod_int";
 		} else {
-			attrRef = "mod_bool";
+			attrRef = "mod_int";
 		}
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 
@@ -572,15 +593,12 @@ public class JasminVisitor extends Visitor {
 		SemanticType expType = exp.getSemanticType();
 		String  attrRef;
 
-		if (expType instanceof STypeInt) {
-			attrRef = "mult_int";
-		} else if (expType instanceof STypeFloat) {
+		if (expType instanceof STypeFloat) {
 			attrRef = "mult_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "mult_int";
 		} else {
-			attrRef = "mult_bool";
+			attrRef = "mult_int";
 		}
+		
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 
 		exp.getLeft().accept(this);
@@ -611,7 +629,19 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(NegativeSExpression exp) {
-		ST expressionTemplate = groupTemplate.getInstanceOf("neg_exp");
+		SemanticType expType = exp.getSemanticType();
+		String  attrRef;
+
+		if (expType instanceof STypeInt) {
+			attrRef = "neg_int";
+		} else if (expType instanceof STypeFloat) {
+			attrRef = "neg_float";
+		} else if (expType instanceof STypeChar) {
+			attrRef = "neg_int";
+		} else {
+			attrRef = "neg_bool";
+		}
+		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 		exp.getSExpression().accept(this);
 		expressionTemplate.add("exp", this.expressionTemplateStack.pop());
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -762,14 +792,10 @@ public class JasminVisitor extends Visitor {
 		SemanticType expType = exp.getSemanticType();
 		String  attrRef;
 
-		if (expType instanceof STypeInt) {
-			attrRef = "sub_int";
-		} else if (expType instanceof STypeFloat) {
+		if (expType instanceof STypeFloat) {
 			attrRef = "sub_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "sub_int";
 		} else {
-			attrRef = "sub_bool";
+			attrRef = "sub_int";
 		}
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 

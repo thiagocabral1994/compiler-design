@@ -420,35 +420,13 @@ iconst_0
 #<num>#<num>:
 >>
 
-equals_int(left_exp, right_exp) ::= <<
+equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>
+<if(convertL)><convertL><endif>
 <right_exp>
-isub
-ifeq #<num>
-iconst_0
-goto #<num>#<num>
-#<num>:
-iconst_1
-#<num>#<num>:
->>
-
-equals_float(left_exp, right_exp) ::= <<
-<left_exp>
-<right_exp>
-fsub
-ifeq #<num>
-iconst_0
-goto #<num>#<num>
-#<num>:
-iconst_1
-#<num>#<num>:
->>
-
-not_equals_int(left_exp, right_exp) ::= <<
-<left_exp>
-<right_exp>
-isub
-ifeq #<num>
+<if(convertR)><convertR><endif>
+fcmpl
+ifne #<num>
 iconst_1
 goto #<num>#<num>
 #<num>:
@@ -456,15 +434,18 @@ iconst_0
 #<num>#<num>:
 >>
 
-not_equals_float(left_exp, right_exp) ::= <<
+
+not_equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>
+<if(convertL)><convertL><endif>
 <right_exp>
-fsub
-ifeq #<num>
-iconst_1
+<if(convertR)><convertR><endif>
+fcmpl
+ifne #<num>
+iconst_0
 goto #<num>#<num>
 #<num>:
-iconst_0
+iconst_1
 #<num>#<num>:
 >>
 
@@ -481,13 +462,13 @@ ixor
 >>
 
 neg_int(exp) ::= <<
-<exp>
 iconst_0
+<exp>
 isub
 >>
 
 neg_float(exp) ::= <<
-<exp>
 fconst_0
+<exp>
 fsub
 >>
