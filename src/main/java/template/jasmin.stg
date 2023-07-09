@@ -1,6 +1,5 @@
 group jasmin;
 
-; feito
 program(name, functions, prefix) ::= <<
 .source <prefix><name>
 .class public output/<prefix><name>
@@ -14,7 +13,6 @@ program(name, functions, prefix) ::= <<
     .end method
 >>
 
-; feito
 data(filename, name, fields, prefix) ::= <<
 .source <prefix><filename>
 .class public output/<prefix><filename>$<prefix><name>
@@ -30,12 +28,9 @@ data(filename, name, fields, prefix) ::= <<
     .end method
 >>
 
-; feito
 field(type, name, prefix) ::= ".field <prefix><name> <type>"
-; feito
 param(type) ::= "<type>"
 
-; feito
 function_void(name, prefix, params, locals, commands, stack) ::= <<
 .method static <prefix><name>(<params>)V
     .limit stack <stack>
@@ -46,7 +41,6 @@ function_void(name, prefix, params, locals, commands, stack) ::= <<
 .end method
 >>
 
-; feito
 function(name, prefix, params, locals, commands, stack) ::= <<
 .method static <prefix><name>(<params>)[Ljava/lang/Object
     .limit stack <stack>
@@ -56,41 +50,31 @@ function(name, prefix, params, locals, commands, stack) ::= <<
 .end method
 >>
 
-; feito
 array_type(type) ::= "[<type>"
-; feito
 int_type() ::= "I"
-; feito
 float_type() ::= "F"
-; feito
 boolean_type() ::= "Z"
-; feito
 char_type() ::= "C"
-; feito
 custom_type(filename, name, prefix) ::= "Loutput/<prefix><filename>$<prefix><name>;"
 
-; feito
 print_int(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
 invokevirtual java/io/PrintStream/print(I)V
 >>
 
-; feito
 print_float(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
 invokevirtual java/io/PrintStream/print(F)V
 >>
 
-; feito
 print_bool(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
 invokevirtual java/io/PrintStream/print(Z)V
 >>
 
-; feito
 print_char(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
