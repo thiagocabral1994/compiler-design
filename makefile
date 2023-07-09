@@ -14,7 +14,9 @@ run: compile
 runAnalyzer:
 	java -cp ST-4.3.1.jar:antlr-4.8-complete.jar:src/main/java Teste $(path) s
 	javac output/_Program.java
-	java -jar classfileanalyzer.jar output/_Program.class > output/teste.j
+	for file in output/*class; do \
+		java -jar classfileanalyzer.jar $$file > $$file.teste.j; \
+	done
 
 clean: 
 	rm -fr src/main/java/parser/.antlr
@@ -39,3 +41,8 @@ cleanParser:
 	rm -f src/main/java/parser/Parser.interp
 	rm -f src/main/java/parser/ParserLexer.interp
 	rm -f src/main/java/parser/ParserLexer.tokens
+
+cleanOutput:
+	rm -f output/*.class
+	rm -f output/*.java
+	rm -f output/*.j
