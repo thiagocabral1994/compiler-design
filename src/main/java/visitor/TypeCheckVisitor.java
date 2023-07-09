@@ -245,7 +245,8 @@ public class TypeCheckVisitor extends Visitor {
 
       if (lValueType.match(this.typeNull)) {
         String headId = lvalueCtx.get(i).getLValue().getHeadId();
-        this.activeScope.set(headId, new Pair<>(returnTypes.get(i), this.intCount++));
+        Pair<SemanticType, Integer> pair = this.activeScope.get(headId);
+        this.activeScope.set(headId, new Pair<>(returnTypes.get(i), pair.getRight()));
         this.stack.push(returnTypes.get(i));
       } else if (!returnTypes.get(i).match(lValueType)) {
         this.logError

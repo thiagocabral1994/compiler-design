@@ -11,4 +11,9 @@ public class Pair<Left, Right> {
 
   public Left getLeft() { return this.left; }
   public Right getRight() { return this.right; }
+
+  public String toString() {
+    String string = "< " + this.left + " , "+  this.right + " >";
+    return string;
+  }
 }

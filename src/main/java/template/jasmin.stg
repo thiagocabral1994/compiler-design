@@ -261,17 +261,41 @@ false_exp() ::= "iconst_0"
 
 new_exp(type, exp, offset) ::= <<>>
 
-call_void(class, func_name, args, args_types, prefix) ::= <<
+call_void(args, prefix, filename, name, param_types) ::= <<
+; Carregando os argumentos do método
 <args; separator="\n">
-invokestatic <prefix><class>/<prefix><func_name>(args_types)V
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)V
 >>
 
-call_return(name, args, prefix, rv_count, call_return_assignments) ::= <<
+call_void_return_pop(args, prefix, filename, name, param_types) ::= <<
+; Carregando os argumentos do método
+<args; separator="\n">
 
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
+pop
 >>
 
-call_return_assignment(declarations, class, lvalue, func_name, params_types, prefix) ::= <<
+call_return(args, prefix, filename, name, param_types, return_size, return_attr) ::= <<
+; Carregando os argumentos do método
+<args; separator="\n">
 
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
+astore_<return_size>
+
+<return_attr; separator="\n\n">
+>>
+
+call_return_attr(return_size, store, index, cast) ::= <<
+; Atribuição do retorno da função
+aload_<return_size>
+iconst_<index>
+aaload
+<cast>
+<store>_<index>
 >>
 
 call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= <<

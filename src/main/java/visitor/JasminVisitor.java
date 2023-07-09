@@ -23,7 +23,6 @@ public class JasminVisitor extends Visitor {
 	private List<ST> functionTemplates, paramTemplates, commandTemplates;
 	private Stack<ST> expressionTemplateStack;
 	private int iteratorCount = 0;
-	private int returnCount = 0;
 	private int scannerCount = 0;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 	private int localSize;
@@ -146,37 +145,58 @@ public class JasminVisitor extends Visitor {
 		ST cmdTemplate;
 		List<ST> localParamTemplates = new ArrayList<>();
 		List<SemanticType> paramTypes = new ArrayList<>();
+		List<ST> argTypeTemplates = new ArrayList<>();
 		for (Expression arg : cmd.getExpressions()) {
 			arg.accept(this);
 			paramTypes.add(arg.getSemanticType());
+			this.processSemanticType(arg.getSemanticType());
+			argTypeTemplates.add(this.typeTemplate);
 			localParamTemplates.add(this.expressionTemplateStack.pop());
 		}
+		STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), paramTypes);
+		STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 
 		if (cmd.getReturnLValueContexts().size() > 0) {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_return");
-			STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), paramTypes);
-			STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 			List<ST> callAssigments = new ArrayList<ST>();
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
-				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_assignment");
-				cmd.getReturnLValueContexts().get(i).accept(this);
-				callAssigment.add("lvalue", this.expressionTemplateStack.pop());
-				callAssigment.add("rv_count", this.returnCount);
+				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_attr");
+				callAssigment.add("return_size", cmd.getReturnLValueContexts().size());
 				callAssigment.add("index", i);
-				this.processSemanticType(sTyFunc.getReturnTypes().get(i));
-				callAssigment.add("type", this.typeTemplate);
+				SemanticType returnType = sTyFunc.getReturnTypes().get(i);
+				String templateRef;
+				if (returnType instanceof STypeInt) {
+					templateRef = "cast_int";
+					callAssigment.add("store", "istore");
+				} else if (returnType instanceof STypeFloat) {
+					templateRef = "cast_float";
+					callAssigment.add("store", "fstore");
+				} else if (returnType instanceof STypeChar) {
+					templateRef = "cast_char";
+					callAssigment.add("store", "istore");
+				} else if (returnType instanceof STypeBool) {
+					templateRef = "cast_bool";
+					callAssigment.add("store", "istore");
+				} else {
+					templateRef = null;
+				}
+				ST printTemplate = groupTemplate.getInstanceOf(templateRef);
+				callAssigment.add("cast", printTemplate);
 				callAssigments.add(callAssigment);
 			}
-			cmdTemplate.add("rv_count", this.returnCount);
-			cmdTemplate.add("call_return_assignments", callAssigments);
-			this.returnCount++;
+			cmdTemplate.add("return_size", cmd.getReturnLValueContexts().size());
+			cmdTemplate.add("return_attr", callAssigments);
+		} else if (sTyFunc.getReturnTypes().size() > 0) {
+			cmdTemplate = this.groupTemplate.getInstanceOf("call_void_return_pop");
 		} else {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_void");
 		}
 
 		cmdTemplate.add("prefix", PREFIX);
 		cmdTemplate.add("name", cmd.getId());
+		cmdTemplate.add("filename", this.fileName);
 		cmdTemplate.add("args", localParamTemplates);
+		cmdTemplate.add("param_types", argTypeTemplates);
 
 		this.commandTemplate = cmdTemplate;
 	}
@@ -333,7 +353,7 @@ public class JasminVisitor extends Visitor {
 		}
 		functionTemplate.add("commands", this.commandTemplates);
 
-		functionTemplate.add("locals", 100 /*this.localSize*/); // TODO
+		functionTemplate.add("locals", 100 /* this.localSize */); // TODO
 		this.functionTemplates.add(functionTemplate);
 	}
 
