@@ -523,9 +523,9 @@ public class TypeCheckVisitor extends Visitor {
     SemanticType testType = this.stack.pop();
     if (testType.match(this.typeInt)) {
       cmd.getCommand().accept(this);
+      cmd.setLabel(intCount++);
       return;
     }
-
     logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Expressão de teste do IF deve ter tipo Int");
   }
 

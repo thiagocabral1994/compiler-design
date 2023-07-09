@@ -188,16 +188,16 @@ goto #<num>#end
 nop
 >>
 
-iterate(exp, thn, label_iterator) ::= <<
+iterate(exp, thn, label_iterator, label_i) ::= <<
 iconst_0
-istore_<label_iterator>
+istore_<label_i>
 
 #start<label_iterator>:
-iload_<label_iterator>
+iload_<label_i>
 <exp>
 if_icmpge #end<label_iterator>
 <thn>
-iinc <label_iterator> 1
+iinc <label_i> 1
 goto #start<label_iterator>
 
 #end<label_iterator>:

@@ -93,16 +93,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairL.getLeft() instanceof STypeInt) || (pairL.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && isLeftSideInt(exp.getRight())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairR.getLeft() instanceof STypeInt) || (pairR.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && isRightSideInt(exp.getLeft())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -330,16 +328,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairL.getLeft() instanceof STypeInt) || (pairL.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairR.getLeft() instanceof STypeInt) || (pairR.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -355,16 +351,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (pairL.getLeft() instanceof STypeInt  || pairL.getLeft() instanceof STypeChar){
+		if (isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (pairR.getLeft() instanceof STypeInt || pairR.getLeft() instanceof STypeChar){
+		if (isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -480,16 +474,16 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (pairL.getLeft() instanceof STypeInt  || pairL.getLeft() instanceof STypeChar){
+
+		if (this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (pairR.getLeft() instanceof STypeInt || pairR.getLeft() instanceof STypeChar){
+
+		if (this.isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -512,6 +506,7 @@ public class JasminVisitor extends Visitor {
 	public void visit(IterateCommand command) {
 		this.iteratorCount++;
 		ST localCommandTemplate = groupTemplate.getInstanceOf("iterate");
+		localCommandTemplate.add("label_i", command.getLabel());
 		localCommandTemplate.add("label_iterator", this.iteratorCount);
 		command.getExpression().accept(this);
 		localCommandTemplate.add("exp", this.expressionTemplateStack.pop());
@@ -530,16 +525,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (pairL.getLeft() instanceof STypeInt  || pairL.getLeft() instanceof STypeChar){
+		if (this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (pairR.getLeft() instanceof STypeInt || pairR.getLeft() instanceof STypeChar){
+		if (this.isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -573,16 +566,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairL.getLeft() instanceof STypeInt) || (pairL.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairR.getLeft() instanceof STypeInt) || (pairR.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -604,18 +595,17 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairL.getLeft() instanceof STypeInt) || (pairL.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairR.getLeft() instanceof STypeInt) || (pairR.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
+
 		this.expressionTemplateStack.push(expressionTemplate);
 	}
 
@@ -802,16 +792,15 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairL.getLeft() instanceof STypeInt) || (pairL.getLeft() instanceof STypeChar))){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
 			expressionTemplate.add("convertL", "i2f");
 		}
 		
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		Pair<SemanticType, Integer> pairR = this.lvaluePairStack.pop();
-		if (expType instanceof STypeFloat && ((pairR.getLeft() instanceof STypeInt) || (pairR.getLeft() instanceof STypeChar))){
+
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -852,6 +841,36 @@ public class JasminVisitor extends Visitor {
 			aux.add("type", this.typeTemplate);
 			this.typeTemplate = aux;
 		}
+	}
+
+	private Boolean isLeftSideInt(RExpression exp) {
+
+		SemanticType lType;
+
+		if(!this.lvaluePairStack.empty()){
+			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
+			lType = pairL.getLeft();
+
+		} else {
+			lType = exp.getSemanticType();
+		}
+
+		return ((lType instanceof STypeInt) || (lType instanceof STypeChar));
+	}
+
+	private Boolean isRightSideInt(RExpression exp) {
+
+		SemanticType lType;
+
+		if(!this.lvaluePairStack.empty()){
+			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
+			lType = pairL.getLeft();
+
+		} else {
+			lType = exp.getSemanticType();
+		}
+
+		return ((lType instanceof STypeInt) || (lType instanceof STypeChar));
 	}
 
 }
