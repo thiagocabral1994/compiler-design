@@ -33,6 +33,9 @@ clean:
 	rm -f ast/*.class
 	rm -f src/main/java/parser/*.class
 	rm -f *.class
+	rm -f output/*.class
+	rm -f output/*.java
+	rm -f output/*.j
 	find . -name "*.class" -delete
 	
 cleanClass :
