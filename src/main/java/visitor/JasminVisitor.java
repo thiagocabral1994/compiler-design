@@ -80,7 +80,7 @@ public class JasminVisitor extends Visitor {
 	public void visit(AdditionAExpression exp) {
 
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeFloat) {
 			attrRef = "add_float";
@@ -93,14 +93,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && isLeftSideInt(exp.getRight())){
+		if (expType instanceof STypeFloat && isLeftSideInt(exp.getRight())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && isRightSideInt(exp.getLeft())){
+		if (expType instanceof STypeFloat && isRightSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -140,29 +140,44 @@ public class JasminVisitor extends Visitor {
 	public void visit(AssignmentCommand command) {
 		Expression exp = command.getExpression();
 		SemanticType expType = exp.getSemanticType();
-		String attrRef;
-		if (expType instanceof STypeInt) {
-			attrRef = "assignment_int";
-		} else if (expType instanceof STypeFloat) {
-			attrRef = "assignment_float";
-		} else if (expType instanceof STypeChar) {
-			attrRef = "assignment_char";
-		} else if (expType instanceof STypeArray) {
-			attrRef = "assignment_array";
-		} else if (expType instanceof STypeCustom) {
-			attrRef = "assignment_custom";
-		} else if (expType instanceof STypeBool) {
-			attrRef = "assignment_bool";
+		ST localCommandTemplate;
+
+		LValue lvalue = command.getLValueContext().getLValue();
+		if (lvalue instanceof ObjectLValue) {
+			ObjectLValue objectLValue = (ObjectLValue) lvalue;
+			objectLValue.getLValue().accept(this);
+			localCommandTemplate = this.groupTemplate.getInstanceOf("assignment_attribute");
+			localCommandTemplate.add("prefix", PREFIX);
+			localCommandTemplate.add("name", objectLValue.getParamID());
+			processSemanticType(objectLValue.getSemanticType());
+			localCommandTemplate.add("return_type", this.typeTemplate);
+			SemanticType type = objectLValue.getLValue().getSemanticType();
+			processSemanticType(type);
+			String typeString = this.typeTemplate.render();
+			localCommandTemplate.add("type", typeString.substring(1, typeString.length() - 1));
 		} else {
-			attrRef = null;
+			lvalue.accept(this);
+			String attrRef;
+			if (expType instanceof STypeInt) {
+				attrRef = "assignment_int";
+			} else if (expType instanceof STypeFloat) {
+				attrRef = "assignment_float";
+			} else if (expType instanceof STypeChar) {
+				attrRef = "assignment_char";
+			} else if (expType instanceof STypeArray) {
+				attrRef = "assignment_array";
+			} else if (expType instanceof STypeCustom) {
+				attrRef = "assignment_custom";
+			} else if (expType instanceof STypeBool) {
+				attrRef = "assignment_bool";
+			} else {
+				attrRef = null;
+			}
+			localCommandTemplate = this.groupTemplate.getInstanceOf(attrRef);
+			Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
+			localCommandTemplate.add("lvalue", pair.getRight());
 		}
 
-		ST localCommandTemplate = this.groupTemplate.getInstanceOf(attrRef);
-		command.getLValueContext().accept(this);
-		Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
-		ST lvalueLabelTemplate = this.groupTemplate.getInstanceOf("lvalue_label");
-		lvalueLabelTemplate.add("label", pair.getRight());
-		localCommandTemplate.add("lvalue", lvalueLabelTemplate);
 		exp.accept(this);
 		localCommandTemplate.add("exp", this.expressionTemplateStack.pop());
 		this.commandTemplate = localCommandTemplate;
@@ -325,7 +340,7 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(DivisionMExpression exp) {
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeFloat) {
 			attrRef = "div_float";
@@ -337,14 +352,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -360,14 +375,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (isLeftSideInt(exp.getLeft())){
+		if (isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (isRightSideInt(exp.getRight())){
+		if (isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -440,6 +455,8 @@ public class JasminVisitor extends Visitor {
 			lvalueRef = "lvalue_bool";
 		} else if (type instanceof STypeCustom) {
 			lvalueRef = "lvalue_custom";
+		} else if (type instanceof STypeArray) {
+			lvalueRef = "lvalue_array";
 		} else {
 			lvalueRef = null;
 		}
@@ -487,16 +504,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-
-		if (this.isLeftSideInt(exp.getLeft())){
+		if (this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-
-		if (this.isRightSideInt(exp.getRight())){
+		if (this.isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -536,14 +551,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (this.isLeftSideInt(exp.getLeft())){
+		if (this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (this.isRightSideInt(exp.getRight())){
+		if (this.isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -564,7 +579,7 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(ModulusMExpression exp) {
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeFloat) {
 			attrRef = "mod_float";
@@ -576,14 +591,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -592,27 +607,27 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(MultiplicationMExpression exp) {
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeFloat) {
 			attrRef = "mult_float";
 		} else {
 			attrRef = "mult_int";
 		}
-		
+
 		ST expressionTemplate = groupTemplate.getInstanceOf(attrRef);
 
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && isRightSideInt(exp.getRight())){
+		if (expType instanceof STypeFloat && isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 
@@ -630,7 +645,7 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(NegativeSExpression exp) {
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeInt) {
 			attrRef = "neg_int";
@@ -669,7 +684,7 @@ public class JasminVisitor extends Visitor {
 		String typeString = this.typeTemplate.render();
 		if (exp.getSemanticType() instanceof STypeCustom) {
 			// Remove os caracteres indesejados de uma custom variable;
-			typeString = typeString.substring(1 , typeString.length()- 1);
+			typeString = typeString.substring(1, typeString.length() - 1);
 		}
 
 		expressionTemplate.add("type", typeString);
@@ -692,10 +707,14 @@ public class JasminVisitor extends Visitor {
 		ST objectLValueTemplate = groupTemplate.getInstanceOf("object_lvalue");
 		lvalueObject.getLValue().accept(this);
 
-		STypeCustom parentType = (STypeCustom) this.lvalueTypeStack.pop();
-		Map<String, SemanticType> map = this.dataMap.get(parentType.toString());
-		this.lvalueTypeStack.push(map.get(lvalueObject.getParamID()));
+		SemanticType parentType = lvalueObject.getLValue().getSemanticType();
+		this.processSemanticType(parentType);
+		String parentTypeString = this.typeTemplate.render();
+		SemanticType returnType = lvalueObject.getSemanticType();
+		this.processSemanticType(returnType);
 
+		objectLValueTemplate.add("type", parentTypeString.substring(1, parentTypeString.length() - 1));
+		objectLValueTemplate.add("return_type", this.typeTemplate);
 		objectLValueTemplate.add("lvalue", this.expressionTemplateStack.pop());
 		objectLValueTemplate.add("name", lvalueObject.getParamID());
 		objectLValueTemplate.add("prefix", PREFIX);
@@ -801,7 +820,7 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(SubtractionAExpression exp) {
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 
 		if (expType instanceof STypeFloat) {
 			attrRef = "sub_float";
@@ -813,15 +832,14 @@ public class JasminVisitor extends Visitor {
 		exp.getLeft().accept(this);
 		expressionTemplate.add("left_exp", this.expressionTemplateStack.pop());
 
-		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())){
+		if (expType instanceof STypeFloat && this.isLeftSideInt(exp.getLeft())) {
 			expressionTemplate.add("convertL", "i2f");
 		}
-		
+
 		exp.getRight().accept(this);
 		expressionTemplate.add("right_exp", this.expressionTemplateStack.pop());
 
-
-		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())){
+		if (expType instanceof STypeFloat && this.isRightSideInt(exp.getRight())) {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
@@ -868,7 +886,7 @@ public class JasminVisitor extends Visitor {
 
 		SemanticType lType;
 
-		if(!this.lvaluePairStack.empty()){
+		if (!this.lvaluePairStack.empty()) {
 			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
 			lType = pairL.getLeft();
 
@@ -883,7 +901,7 @@ public class JasminVisitor extends Visitor {
 
 		SemanticType lType;
 
-		if(!this.lvaluePairStack.empty()){
+		if (!this.lvaluePairStack.empty()) {
 			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
 			lType = pairL.getLeft();
 
