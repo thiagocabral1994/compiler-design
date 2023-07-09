@@ -233,7 +233,10 @@ assignment_custom(lvalue, exp) ::= <<
 astore_<lvalue>
 >>
 
-lvalue_label(label) ::= "<label>"
+assignment_attribute(exp, type, prefix, name, return_type) ::= <<
+<exp>
+putfield <type>/<prefix><name> <return_type>
+>>
 
 lvalue_int(label) ::= <<
 iload_<label>
@@ -255,9 +258,13 @@ lvalue_custom(label) ::= <<
 aload_<label>
 >>
 
-array_lvalue(index, label, offset_array_lvalue) ::= <<
+lvalue_array(label) ::= <<
 aload_<label>
+>>
+
+array_lvalue(index, offset_array_lvalue) ::= <<
 iconst_<index>
+aaload
 
 <offset_array_lvalue; separator="\n\n">
 >>
@@ -267,10 +274,9 @@ aaload
 iconst_<index>
 >>
 
-object_lvalue(index, label, type, prefix, attribute) ::= <<
-aload_<label>
-iconst_<index>
-putfield <type>/<prefix><attribute>
+object_lvalue(lvalue, type, prefix, name, return_type) ::= <<
+<lvalue>
+getfield <type>/<prefix><name> <return_type>
 >>
 
 float_exp(value) ::= "ldc <value>"
@@ -361,7 +367,9 @@ checkcast java/lang/Boolean
 invokevirtual java/lang/Boolean/booleanValue()Z
 >>
 
-parenthesis_exp(exp) ::= <<>>
+parenthesis_exp(exp) ::= <<
+<exp>
+>>
 
 add_int(left_exp, right_exp) ::= <<
 <left_exp>
