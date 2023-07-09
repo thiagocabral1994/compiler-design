@@ -18,6 +18,10 @@ runAnalyzer:
 		java -jar classfileanalyzer.jar $$file > $$file.teste.j; \
 	done
 
+compileJasmin: run
+	java -jar jasmin.jar output/*.j
+	java output._Program
+
 runJasmin:
 	java -jar jasmin.jar output/*.j
 	java output._Program
