@@ -27,6 +27,7 @@ public class JasminVisitor extends Visitor {
 	private int scannerCount = 0;
 	private int lastIndex;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
+	private int localSize;
 	private Stack<Pair<SemanticType, Integer>> lvaluePairStack;
 
 	private String fileName;
@@ -291,8 +292,8 @@ public class JasminVisitor extends Visitor {
 
 		STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), function.getFunctionType().getParams());
 		this.localEnv = this.env.get(functionKey);
+		this.localSize = this.localEnv.getKeys().size();
 		functionTemplate.add("stack", this.localEnv.getMaxStackSize());
-		functionTemplate.add("locals", this.localEnv.getKeys().size()); // TODO: Somar com os iterates
 
 		List<ST> paramTemplates = new ArrayList<ST>();
 		for (Parameter param : function.getParameters()) {
@@ -310,6 +311,7 @@ public class JasminVisitor extends Visitor {
 		}
 		functionTemplate.add("commands", this.commandTemplates);
 
+		functionTemplate.add("locals", this.localSize);
 		this.functionTemplates.add(functionTemplate);
 	}
 
@@ -558,7 +560,8 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(ReturnCommand cmd) {
 		ST localCommandTemplate = groupTemplate.getInstanceOf("return");
-		localCommandTemplate.add("rv_count", this.returnCount++);
+		localCommandTemplate.add("size_label", cmd.getLabel());
+		this.localSize++;
 		localCommandTemplate.add("size", cmd.getReturnExpressions().size());
 		List<ST> returnExpTemplates = new ArrayList<ST>();
 		for (Expression exp : cmd.getReturnExpressions()) {
