@@ -64,13 +64,16 @@ public class TypeCheckVisitor extends Visitor {
     left = this.stack.pop();
 
     if ((right.match(typeInt)) || right.match(typeChar)) {
-      if (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)) {
-        this.stack.push(left);
-        n.setSemanticType(left);
+      if (left.match(typeFloat)) {
+        this.stack.push(typeFloat);
+        n.setSemanticType(typeFloat);
+      } else if (left.match(typeInt) || left.match(typeChar)) {
+        this.stack.push(typeInt);
+        n.setSemanticType(typeInt);
       } else {
-        logError.add(n.getLine() + ", " + n.getCol() + ": Operador" + opName + "não se aplica aos tipos "
-            + left.toString() + " e " + right.toString());
-        this.stack.push(typeError);
+          logError.add(n.getLine() + ", " + n.getCol() + ": Operador" + opName + "não se aplica aos tipos "
+              + left.toString() + " e " + right.toString());
+          this.stack.push(typeError);
       }
     } else if (right.match(typeFloat)) {
       if (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)) {

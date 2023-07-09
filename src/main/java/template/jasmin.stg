@@ -171,17 +171,17 @@ nop
 
 iterate(exp, thn, label_iterator) ::= <<
 iconst_0
-istore <label_iterator>
+istore_<label_iterator>
 
-#start_loop:
-iload <label_iterator>
-bipush <exp>
-if_icmpge #end_loop
+#start<label_iterator>:
+iload_<label_iterator>
+<exp>
+if_icmpge #end<label_iterator>
 <thn>
 iinc <label_iterator> 1
-goto #start_loop
+goto #start<label_iterator>
 
-#end_loop
+#end<label_iterator>:
 >>
 
 assignment_int(lvalue, exp) ::= <<
@@ -262,15 +262,45 @@ invokestatic <prefix><class>/<prefix><func_name>(args_types)[Ljava/lang/Object
 
 parenthesis_exp(exp) ::= <<>>
 
+add_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+iadd
+>>
+
+add_float(left_exp, convertL, right_exp, convertR) ::= <<
+<left_exp>
+<if(convertL)><convertL><endif>
+<right_exp>
+<if(convertR)><convertR><endif>
+fadd
+>>
+
+sub_int(left_exp, right_exp) ::= <<
+<left_exp>
+<right_exp>
+isub
+>>
+
+sub_float(left_exp, convertL, right_exp, convertR) ::= <<
+<left_exp>
+<if(convertL)><convertL><endif>
+<right_exp>
+<if(convertR)><convertR><endif>
+fsub
+>>
+
 mult_int(left_exp, right_exp) ::= <<
 <left_exp>
 <right_exp>
 imul
 >>
 
-mult_float(left_exp, right_exp) ::= <<
+mult_float(left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>
+<if(convertL)><convertL><endif>
 <right_exp>
+<if(convertR)><convertR><endif>
 fmul
 >>
 
@@ -280,45 +310,42 @@ div_int(left_exp, right_exp) ::= <<
 idiv
 >>
 
+div_float(left_exp, convertL, right_exp, convertR) ::= <<
+<left_exp>
+<if(convertL)><convertL><endif>
+<right_exp>
+<if(convertR)><convertR><endif>
+fdiv
+>>
+
+
 mod_int(left_exp, right_exp) ::= <<
 <left_exp>
 <right_exp>
 irem
 >>
 
-add_int(left_exp, right_exp) ::= <<
+mod_float(left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>
+<if(convertL)><convertL><endif>
 <right_exp>
-iadd
+<if(convertR)><convertR><endif>
+frem
 >>
 
-sub_int(left_exp, right_exp) ::= <<
-<left_exp>
-<right_exp>
-isub
->>
 
-lt_int(num, left_exp, right_exp) ::= <<
-<right_exp>
+
+lt_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>
-isub
-ifgt #<num>
-iconst_0
+<if(convertL)><convertL><endif>
+<right_exp>
+<if(convertR)><convertR><endif>
+fcmpg
+ifge #<num>
+iconst_1
 goto #<num>#<num>
 #<num>:
-iconst_1
-#<num>#<num>:
->>
-
-lt_float(num, left_exp, right_exp) ::= <<
-<right_exp>
-<left_exp>
-fsub
-ifgt #<num>
 iconst_0
-goto #<num>#<num>
-#<num>:
-iconst_1
 #<num>#<num>:
 >>
 
