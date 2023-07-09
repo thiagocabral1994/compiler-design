@@ -27,6 +27,7 @@ public class JasminVisitor extends Visitor {
 	private int returnCount = 0;
 	private int lessCount = 0;
 	private int lastIndex;
+	private int scannerCount = 0;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 	private int localSize;
 	private Stack<Pair<SemanticType, Integer>> lvaluePairStack;
@@ -37,7 +38,8 @@ public class JasminVisitor extends Visitor {
 	private Map<String, Map<String, SemanticType>> dataMap;
 	private Stack<SemanticType> lvalueTypeStack;
 
-	public JasminVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
+	public JasminVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env,
+			Map<String, Map<String, SemanticType>> map) {
 		this.groupTemplate = new STGroupFile("./template/jasmin.stg");
 		this.renderedTemplates = new ArrayList<>();
 		this.fileName = fileName;
@@ -141,7 +143,7 @@ public class JasminVisitor extends Visitor {
 	public void visit(AssignmentCommand command) {
 		Expression exp = command.getExpression();
 		SemanticType expType = exp.getSemanticType();
-		String  attrRef;
+		String attrRef;
 		if (expType instanceof STypeInt) {
 			attrRef = "assignment_int";
 		} else if (expType instanceof STypeFloat) {
@@ -172,37 +174,58 @@ public class JasminVisitor extends Visitor {
 		ST cmdTemplate;
 		List<ST> localParamTemplates = new ArrayList<>();
 		List<SemanticType> paramTypes = new ArrayList<>();
+		List<ST> argTypeTemplates = new ArrayList<>();
 		for (Expression arg : cmd.getExpressions()) {
 			arg.accept(this);
 			paramTypes.add(arg.getSemanticType());
+			this.processSemanticType(arg.getSemanticType());
+			argTypeTemplates.add(this.typeTemplate);
 			localParamTemplates.add(this.expressionTemplateStack.pop());
 		}
+		STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), paramTypes);
+		STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 
 		if (cmd.getReturnLValueContexts().size() > 0) {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_return");
-			STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), paramTypes);
-			STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
 			List<ST> callAssigments = new ArrayList<ST>();
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
-				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_assignment");
-				cmd.getReturnLValueContexts().get(i).accept(this);
-				callAssigment.add("lvalue", this.expressionTemplateStack.pop());
-				callAssigment.add("rv_count", this.returnCount);
+				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_attr");
+				callAssigment.add("return_size", cmd.getReturnLValueContexts().size());
 				callAssigment.add("index", i);
-				this.processSemanticType(sTyFunc.getReturnTypes().get(i));
-				callAssigment.add("type", this.typeTemplate);
+				SemanticType returnType = sTyFunc.getReturnTypes().get(i);
+				String templateRef;
+				if (returnType instanceof STypeInt) {
+					templateRef = "cast_int";
+					callAssigment.add("store", "istore");
+				} else if (returnType instanceof STypeFloat) {
+					templateRef = "cast_float";
+					callAssigment.add("store", "fstore");
+				} else if (returnType instanceof STypeChar) {
+					templateRef = "cast_char";
+					callAssigment.add("store", "istore");
+				} else if (returnType instanceof STypeBool) {
+					templateRef = "cast_bool";
+					callAssigment.add("store", "istore");
+				} else {
+					templateRef = null;
+				}
+				ST printTemplate = groupTemplate.getInstanceOf(templateRef);
+				callAssigment.add("cast", printTemplate);
 				callAssigments.add(callAssigment);
 			}
-			cmdTemplate.add("rv_count", this.returnCount);
-			cmdTemplate.add("call_return_assignments", callAssigments);
-			this.returnCount++;
+			cmdTemplate.add("return_size", cmd.getReturnLValueContexts().size());
+			cmdTemplate.add("return_attr", callAssigments);
+		} else if (sTyFunc.getReturnTypes().size() > 0) {
+			cmdTemplate = this.groupTemplate.getInstanceOf("call_void_return_pop");
 		} else {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_void");
 		}
 
 		cmdTemplate.add("prefix", PREFIX);
 		cmdTemplate.add("name", cmd.getId());
+		cmdTemplate.add("filename", this.fileName);
 		cmdTemplate.add("args", localParamTemplates);
+		cmdTemplate.add("param_types", argTypeTemplates);
 
 		this.commandTemplate = cmdTemplate;
 	}
@@ -211,24 +234,45 @@ public class JasminVisitor extends Visitor {
 	public void visit(CallPExpression exp) {
 		ST expressionTemplate = groupTemplate.getInstanceOf("call_exp");
 		expressionTemplate.add("name", exp.getID());
+		expressionTemplate.add("filename", this.fileName);
 		expressionTemplate.add("prefix", PREFIX);
 
 		List<ST> paramTemplates = new ArrayList<ST>();
 		List<SemanticType> paramTypes = new ArrayList<>();
+		List<ST> paramTypesTemplate = new ArrayList<>();
 		for (Expression arg : exp.getParamExpressions()) {
 			arg.accept(this);
 			paramTypes.add(arg.getSemanticType());
+			this.processSemanticType(arg.getSemanticType());
+			paramTypesTemplate.add(this.typeTemplate);
 			paramTemplates.add(this.expressionTemplateStack.pop());
 		}
 		expressionTemplate.add("args", paramTemplates);
+		expressionTemplate.add("param_types", paramTypesTemplate);
 
 		exp.getBracketExpression().accept(this);
-		expressionTemplate.add("exp", this.expressionTemplateStack.pop());
+		int index = exp.getIndex();
+		expressionTemplate.add("exp", index);
 
 		STypeFunctionKey functionKey = STypeFunctionKey.create(exp.getID(), paramTypes);
 		STypeFunction sTyFunc = this.env.get(functionKey).getFunctionType();
-		this.processSemanticType(sTyFunc.getReturnTypes().get(this.lastIndex));
-		expressionTemplate.add("type", this.typeTemplate);
+		SemanticType returnType = sTyFunc.getReturnTypes().get(index);
+		expressionTemplate.add("return_type", sTyFunc.getReturnTypes().size() > 0 ? "[Ljava/lang/Object;" : "V");
+
+		String templateRef;
+		if (returnType instanceof STypeInt) {
+			templateRef = "cast_int";
+		} else if (returnType instanceof STypeFloat) {
+			templateRef = "cast_float";
+		} else if (returnType instanceof STypeChar) {
+			templateRef = "cast_char";
+		} else if (returnType instanceof STypeBool) {
+			templateRef = "cast_bool";
+		} else {
+			templateRef = null;
+		}
+		ST printTemplate = groupTemplate.getInstanceOf(templateRef);
+		expressionTemplate.add("cast", printTemplate);
 
 		this.expressionTemplateStack.push(expressionTemplate);
 	}
@@ -336,14 +380,15 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(Function function) {
-		ST functionTemplate = this.groupTemplate.getInstanceOf(function.getReturnTypes().size() > 0 ? "function" : "function_void");
+		ST functionTemplate = this.groupTemplate
+				.getInstanceOf(function.getReturnTypes().size() > 0 ? "function" : "function_void");
 		functionTemplate.add("name", function.getId());
 		functionTemplate.add("prefix", PREFIX);
 
 		STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), function.getFunctionType().getParams());
 		this.localEnv = this.env.get(functionKey);
 		this.localSize = this.localEnv.getKeys().size();
-		functionTemplate.add("stack", this.localEnv.getMaxStackSize());
+		functionTemplate.add("stack", 100/* this.localEnv.getMaxStackSize() */); // TODO
 
 		List<ST> paramTemplates = new ArrayList<ST>();
 		for (Parameter param : function.getParameters()) {
@@ -361,7 +406,7 @@ public class JasminVisitor extends Visitor {
 		}
 		functionTemplate.add("commands", this.commandTemplates);
 
-		functionTemplate.add("locals", this.localSize);
+		functionTemplate.add("locals", 100 /* this.localSize */); // TODO
 		this.functionTemplates.add(functionTemplate);
 	}
 
@@ -371,7 +416,7 @@ public class JasminVisitor extends Visitor {
 		this.lvaluePairStack.push(pair);
 		SemanticType type = pair.getLeft();
 		Integer label = pair.getRight();
-		String  lvalueRef;
+		String lvalueRef;
 		if (type instanceof STypeInt) {
 			lvalueRef = "lvalue_int";
 		} else if (type instanceof STypeFloat) {
@@ -434,7 +479,6 @@ public class JasminVisitor extends Visitor {
 		ST expressionTemplate = groupTemplate.getInstanceOf("int_exp");
 		expressionTemplate.add("value", exp.getValue());
 		this.expressionTemplateStack.push(expressionTemplate);
-		this.lastIndex = exp.getValue();
 	}
 
 	@Override
@@ -635,7 +679,7 @@ public class JasminVisitor extends Visitor {
 		Expression exp = command.getExpression();
 		exp.accept(this);
 		SemanticType expType = exp.getSemanticType();
-		String  templateRef;
+		String templateRef;
 		if (expType instanceof STypeInt) {
 			templateRef = "print_int";
 		} else if (expType instanceof STypeFloat) {
@@ -654,11 +698,10 @@ public class JasminVisitor extends Visitor {
 	public void visit(ReadCommand cmd) {
 		cmd.getLValue().accept(this);
 		Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
-		
+
 		SemanticType sType = pair.getLeft();
 
-
-		String  templateRef;
+		String templateRef;
 		if (sType instanceof STypeInt) {
 			templateRef = "read_int";
 		} else if (sType instanceof STypeFloat) {
@@ -686,9 +729,29 @@ public class JasminVisitor extends Visitor {
 		this.localSize++;
 		localCommandTemplate.add("size", cmd.getReturnExpressions().size());
 		List<ST> returnExpTemplates = new ArrayList<ST>();
+		int index = 0;
 		for (Expression exp : cmd.getReturnExpressions()) {
 			exp.accept(this);
-			returnExpTemplates.add(this.expressionTemplateStack.pop());
+			ST returnAttTemplate = this.groupTemplate.getInstanceOf("return_attr");
+			returnAttTemplate.add("size_label", cmd.getLabel());
+			returnAttTemplate.add("index", index);
+			returnAttTemplate.add("exp", this.expressionTemplateStack.pop());
+			String templateRef;
+			if (exp.getSemanticType() instanceof STypeInt) {
+				templateRef = "return_attr_int";
+			} else if (exp.getSemanticType() instanceof STypeFloat) {
+				templateRef = "return_attr_float";
+			} else if (exp.getSemanticType() instanceof STypeChar) {
+				templateRef = "return_attr_char";
+			} else if (exp.getSemanticType() instanceof STypeBool) {
+				templateRef = "return_attr_bool";
+			} else {
+				templateRef = null;
+			}
+			ST castTemplate = this.groupTemplate.getInstanceOf(templateRef);
+			returnAttTemplate.add("return_attr_type", castTemplate);
+			returnExpTemplates.add(returnAttTemplate);
+			index++;
 		}
 		localCommandTemplate.add("exps", returnExpTemplates);
 		this.commandTemplate = localCommandTemplate;

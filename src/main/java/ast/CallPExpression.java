@@ -9,6 +9,7 @@ public class CallPExpression extends PExpression implements Visitable {
   private String id;
   private List<Expression> paramExps;
   private Expression bracketExp;
+  private int index;
 
   public CallPExpression(int line, int col, String id, List<Expression> paramsExps, Expression bracketExp) {
     super(line, col);
@@ -20,6 +21,8 @@ public class CallPExpression extends PExpression implements Visitable {
   public List<Expression> getParamExpressions() { return this.paramExps; }
   public Expression getBracketExpression() { return this.bracketExp; }
   public String getID() { return this.id; }
+  public int getIndex() { return this.index; }
+  public void setIndex(int index) { this.index = index; }
 
   public void accept(Visitor visitor) {
     visitor.visit(this);

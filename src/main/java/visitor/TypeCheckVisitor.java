@@ -29,6 +29,7 @@ public class TypeCheckVisitor extends Visitor {
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
+  private boolean printCheck;
 
   private int intCount;
 
@@ -247,7 +248,8 @@ public class TypeCheckVisitor extends Visitor {
 
       if (lValueType.match(this.typeNull)) {
         String headId = lvalueCtx.get(i).getLValue().getHeadId();
-        this.activeScope.set(headId, new Pair<>(returnTypes.get(i), this.intCount++));
+        Pair<SemanticType, Integer> pair = this.activeScope.get(headId);
+        this.activeScope.set(headId, new Pair<>(returnTypes.get(i), pair.getRight()));
         this.stack.push(returnTypes.get(i));
       } else if (!returnTypes.get(i).match(lValueType)) {
         this.logError
@@ -285,6 +287,7 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunction typeFunction = localEnv.getFunctionType();
     if (this.stack.pop().match(typeInt)) {
       int index = this.lastIndex;
+      exp.setIndex(index);
       if (index >= 0 && typeFunction.getReturnTypes().size() > index) {
         SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
         this.stack.push(returnIndexType);
@@ -403,6 +406,7 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), paramTypes);
 
     this.activeScope = env.get(functionKey);
+    this.intCount = 0;
     for (int i = 0; i < function.getParameters().size(); i++) {
       this.activeScope.set(function.getParameters().get(i).getId(), new Pair<>(paramTypes.get(i), this.intCount++));
     }
@@ -701,8 +705,9 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(PrintCommand cmd) {
+    this.printCheck = true;
     cmd.getExpression().accept(this);
-    this.testMaxSize(this.stack.size() > 1 ? this.stack.size() : 2);
+    this.printCheck = false;
     this.stack.pop();
   }
 
@@ -779,6 +784,7 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
     this.returnCheck = true;
+    cmd.setLabel(this.intCount++);
     STypeFunction funcType = this.activeScope.getFunctionType();
     List<Expression> returnExpressions = cmd.getReturnExpressions();
 
@@ -838,6 +844,10 @@ public class TypeCheckVisitor extends Visitor {
     if (this.stack == null) {
       this.activeScope.assertMaxStackSize(0);
       return;
+    }
+
+    if (this.printCheck) {
+      this.activeScope.assertMaxStackSize(overwrite + 1);
     }
     this.activeScope.assertMaxStackSize(overwrite);
   }

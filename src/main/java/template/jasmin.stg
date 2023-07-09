@@ -42,7 +42,7 @@ function_void(name, prefix, params, locals, commands, stack) ::= <<
 >>
 
 function(name, prefix, params, locals, commands, stack) ::= <<
-.method static <prefix><name>(<params>)[Ljava/lang/Object
+.method static <prefix><name>(<params>)[Ljava/lang/Object;
     .limit stack <stack>
     .limit locals <locals>
     
@@ -141,17 +141,36 @@ invokevirtual java/util/Scanner/close()V
 return(exps, size, size_label) ::= <<
 iconst_<size>
 anewarray java/lang/Object
-astore_<size_label> 
+astore <size_label> 
 
-<exps: { exp | 
-aload_<size_label>
-iconst_<i0>
-<exp>
-aastore
-}; separator="\n\n">
+<exps; separator="\n\n">
 
-aload_<size_label>
+aload <size_label>
 areturn
+>>
+
+return_attr(size_label, index, exp, return_attr_type) ::= <<
+aload <size_label>
+iconst_<index>
+<exp>
+<return_attr_type>
+aastore
+>>
+
+return_attr_int() ::= <<
+invokestatic java/lang/Integer/valueOf(I)Ljava/lang/Integer;
+>>
+
+return_attr_char() ::= <<
+invokestatic java/lang/Character/valueOf(C)Ljava/lang/Character;
+>>
+
+return_attr_bool() ::= <<
+invokestatic java/lang/Boolean/valueOf(Z)Ljava/lang/Boolean;
+>>
+
+return_attr_float() ::= <<
+invokestatic java/lang/Float/valueOf(F)Ljava/lang/Float;
 >>
 
 list_command(commands) ::= <<
@@ -242,22 +261,74 @@ false_exp() ::= "iconst_0"
 
 new_exp(type, exp, offset) ::= <<>>
 
-call_void(class, func_name, args, args_types, prefix) ::= <<
+call_void(args, prefix, filename, name, param_types) ::= <<
+; Carregando os argumentos do método
 <args; separator="\n">
-invokestatic <prefix><class>/<prefix><func_name>(args_types)V
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)V
 >>
 
-call_return(name, args, prefix, rv_count, call_return_assignments) ::= <<
-
->>
-
-call_return_assignment(declarations, class, lvalue, func_name, params_types, prefix) ::= <<
-
->>
-
-call_exp(class, func_name, args, args_types, prefix, return_types) ::= <<
+call_void_return_pop(args, prefix, filename, name, param_types) ::= <<
+; Carregando os argumentos do método
 <args; separator="\n">
-invokestatic <prefix><class>/<prefix><func_name>(args_types)[Ljava/lang/Object
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
+pop
+>>
+
+call_return(args, prefix, filename, name, param_types, return_size, return_attr) ::= <<
+; Carregando os argumentos do método
+<args; separator="\n">
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
+astore_<return_size>
+
+<return_attr; separator="\n\n">
+>>
+
+call_return_attr(return_size, store, index, cast) ::= <<
+; Atribuição do retorno da função
+aload_<return_size>
+iconst_<index>
+aaload
+<cast>
+<store>_<index>
+>>
+
+call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= <<
+; Carregando os argumentos do método
+<args; separator="\n">
+
+; Invocação estática do método
+invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)<return_type>
+
+; Atribuição do retorno da função
+iconst_<exp>
+aaload
+<cast>
+>>
+
+cast_char() ::= <<
+checkcast java/lang/Character
+invokevirtual java/lang/Character/charValue()C
+>>
+
+cast_int() ::= <<
+checkcast java/lang/Integer
+invokevirtual java/lang/Integer/intValue()I
+>>
+
+cast_float() ::= <<
+checkcast java/lang/Float
+invokevirtual java/lang/Float/floatValue()F
+>>
+
+cast_bool() ::= <<
+checkcast java/lang/Boolean
+invokevirtual java/lang/Boolean/booleanValue()Z
 >>
 
 parenthesis_exp(exp) ::= <<>>
