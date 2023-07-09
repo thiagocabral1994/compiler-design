@@ -1,7 +1,7 @@
-group jasmin
+group jasmin;
 
 program(name, datas, functions, prefix) ::= <<
-.source <prefix><name>
+.source <prefix><name>.java
 .class public output/<prefix><name>
 .super java/lang/Object
 
@@ -70,59 +70,75 @@ invokervirtual java/io/PrintStream/print(C)V
 >>
 
 read_int(lvalue, scanner) ::= <<
-    new java/util/Scanner      
-    invokespecial java/util/Scanner/<init>()V 
+    new java/util/Scanner
+    dup
+    getstatic java/lang/System/in Ljava/io/InputStream;
+    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
     astore <scanner>
-    aload <scanner
+    aload <scanner>
     invokevirtual java/util/Scanner/nextInt()I
     istore <lvalue>
+    aload <scanner>
+    invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_float(lvalue, scanner) ::= <<
     new java/util/Scanner
-    invokespecial java/util/Scanner/<init>()V
+    dup
+    getstatic java/lang/System/in Ljava/io/InputStream;
+    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
     astore <scanner>
     aload <scanner>
     invokevirtual java/util/Scanner/nextFloat()F
     fstore <lvalue>
+    aload <scanner>
+    invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_bool(lvalue, scanner) ::= <<
     new java/util/Scanner
-    invokespecial java/util/Scanner/<init>()V
+    dup
+    getstatic java/lang/System/in Ljava/io/InputStream;
+    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
     astore <scanner>
     aload <scanner>
     invokevirtual java/util/Scanner/nextBoolean()Z
-    istore <lvalue> 
+    istore <lvalue>
+    aload <scanner>
+    invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_char(lvalue, scanner) ::= <<
     new java/util/Scanner
-    invokespecial java/util/Scanner/<init>()V
+    dup
+    getstatic java/lang/System/in Ljava/io/InputStream;
+    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
     astore <scanner>
     aload <scanner>
-    invokevirtual java/util/Scanner/next()Ljava/lang/String;
+    invokevirtual java/util/Scanner/next()Ljava/lang/String
     iconst_0
     invokevirtual java/lang/String/charAt(I)C
-    istore <lvalue>
+    store <lvalue>
+    aload <scanner>
+    invokevirtual java/util/Scanner/close()V
 >>
 
-return(exps, size, rv_count) ::= <<
-ldc <size>
+return(exps, size, size_label) ::= <<
+iconst_<size>
 anewarray java/lang/Object
-astore_0 
+astore_<size_label> 
 
 <exps: { exp | 
-aload_0
+aload_<size_label>
 iconst_<i0>
 <exp>
 aastore
 }; separator="\n\n">
 
-aload_0
+aload_<size_label>
 areturn
 >>
 
@@ -141,16 +157,16 @@ goto #<num>#end
 nop
 >>
 
-iterate(exp, thn, iterator) ::= <<
+iterate(exp, thn, label_iterator) ::= <<
 iconst_0
-istore i<iterator>
+istore <label_iterator>
 
 #start_loop:
-iload i<iterator>
+iload <label_iterator>
 bipush <exp>
 if_icmpge #end_loop
 <thn>
-iinc i<iterator> 1
+iinc <label_iterator> 1
 goto #start_loop
 
 #end_loop
@@ -158,12 +174,12 @@ goto #start_loop
 
 assignment_int(lvalue, exp) ::= <<
 <exp>
-istore <lvalue>
+istore_<lvalue>
 >>
 
 assignment_float(lvalue, exp) ::= <<
 <exp>
-fstore <lvalue>
+fstore_<lvalue>
 >>
 
 lvalue(name, prefix) ::= "<prefix><name>"
@@ -196,13 +212,13 @@ call_return(name, args, prefix, rv_count, call_return_assignments) ::= <<
 
 >>
 
-call_return_assignment(lvalue, rv_count, type, index) ::= <<
+call_return_assignment(declarations, class, lvalue, func_name, params_types, prefix) ::= <<
 
 >>
 
-call_exp(class, func_name, args, args_types, prefix, return_type) ::= <<
+call_exp(class, func_name, args, args_types, prefix, return_types) ::= <<
 <args; separator="\n">
-invokestatic <prefix><class>/<prefix><func_name>(args_types)<return_type>
+invokestatic <prefix><class>/<prefix><func_name>(args_types)[Ljava/lang/Object
 >>
 
 parenthesis_exp(exp) ::= 
