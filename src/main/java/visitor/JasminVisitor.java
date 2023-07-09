@@ -432,9 +432,14 @@ public class JasminVisitor extends Visitor {
 			lvalueRef = "lvalue_float";
 		} else if (type instanceof STypeChar) {
 			lvalueRef = "lvalue_char";
-		} else {
+		} else if (type instanceof STypeBool) {
 			lvalueRef = "lvalue_bool";
+		} else if (type instanceof STypeCustom) {
+			lvalueRef = "lvalue_custom";
+		} else {
+			lvalueRef = null;
 		}
+
 		ST template = this.groupTemplate.getInstanceOf(lvalueRef);
 		template.add("label", label);
 		this.expressionTemplateStack.push(template);
