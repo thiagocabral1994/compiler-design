@@ -223,6 +223,16 @@ assignment_bool(lvalue, exp) ::= <<
 istore_<lvalue>
 >>
 
+assignment_array(lvalue, exp) ::= <<
+<exp>
+astore_<lvalue>
+>>
+
+assignment_custom(lvalue, exp) ::= <<
+<exp>
+astore_<lvalue>
+>>
+
 lvalue_label(label) ::= "<label>"
 
 lvalue_int(label) ::= <<
@@ -259,7 +269,16 @@ null_exp() ::= "aconst_null"
 true_exp() ::= "iconst_1"
 false_exp() ::= "iconst_0"
 
-new_exp(type, exp, offset) ::= <<>>
+new_array(size, offset, type) ::= <<
+iconst_<size>
+anewarray <offset: {o | [}><type>
+>>
+
+new_object(type) ::= <<
+new <type>
+dup
+invokespecial <type>/\<init>()V
+>>
 
 call_void(args, prefix, filename, name, param_types) ::= <<
 ; Carregando os argumentos do método
