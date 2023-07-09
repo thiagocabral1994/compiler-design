@@ -366,7 +366,6 @@ public class JasminVisitor extends Visitor {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
-		this.eqCount++;
 	}
 
 	@Override
@@ -450,7 +449,7 @@ public class JasminVisitor extends Visitor {
 		cmd.getCommand().accept(this);
 		localCommandTemplate.add("thn", this.commandTemplate);
 		this.commandTemplate = localCommandTemplate;
-		this.ifCount--;		
+
 	}
 
 	@Override
@@ -465,7 +464,7 @@ public class JasminVisitor extends Visitor {
 		cmd.getElseCommand().accept(this);
 		localCommandTemplate.add("els", this.commandTemplate);
 		this.commandTemplate = localCommandTemplate;
-		this.ifCount--;
+
 	}
 
 	@Override
@@ -491,7 +490,6 @@ public class JasminVisitor extends Visitor {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
-		this.eqCount++;
 	}
 
 	@Override
@@ -517,7 +515,6 @@ public class JasminVisitor extends Visitor {
 		command.getCommand().accept(this);
 		localCommandTemplate.add("thn", this.commandTemplate);
 		this.commandTemplate = localCommandTemplate;
-		this.iteratorCount--;
 	}
 
 	@Override
@@ -540,7 +537,6 @@ public class JasminVisitor extends Visitor {
 			expressionTemplate.add("convertR", "i2f");
 		}
 		this.expressionTemplateStack.push(expressionTemplate);
-		this.lessCount++;
 	}
 
 	@Override

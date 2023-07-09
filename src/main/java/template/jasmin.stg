@@ -179,12 +179,12 @@ list_command(commands) ::= <<
 
 if(num, exp, thn, els) ::= <<
 <exp>
-ifeq #<num>
+ifeq #label_if<num>
 <thn>
-goto #<num>#end
-#<num>:
+goto #label_if<num>#end
+#label_if<num>:
 <els>
-#<num>#end:
+#label_if<num>#end:
 nop
 >>
 
@@ -431,12 +431,12 @@ lt_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <right_exp>
 <if(convertR)><convertR><endif>
 fcmpg
-ifge #<num>
+ifge #label_lt<num>
 iconst_1
-goto #<num>#<num>
-#<num>:
+goto #label_lt<num>#<num>
+#label_lt<num>:
 iconst_0
-#<num>#<num>:
+#label_lt<num>#<num>:
 >>
 
 equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
@@ -445,12 +445,12 @@ equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <right_exp>
 <if(convertR)><convertR><endif>
 fcmpl
-ifne #<num>
+ifne #label_eq<num>
 iconst_1
-goto #<num>#<num>
-#<num>:
+goto #label_eq<num>#<num>
+#label_eq<num>:
 iconst_0
-#<num>#<num>:
+#label_eq<num>#<num>:
 >>
 
 
@@ -460,12 +460,12 @@ not_equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <right_exp>
 <if(convertR)><convertR><endif>
 fcmpl
-ifne #<num>
+ifne #label_neq<num>
 iconst_0
-goto #<num>#<num>
-#<num>:
+goto #label_neq<num>#<num>
+#label_neq<num>:
 iconst_1
-#<num>#<num>:
+#label_neq<num>#<num>:
 >>
 
 and_exp(left_exp, right_exp) ::= <<
