@@ -121,8 +121,12 @@ public class JasminVisitor extends Visitor {
 			attrRef = "assignment_float";
 		} else if (expType instanceof STypeChar) {
 			attrRef = "assignment_char";
+		} else if (expType instanceof STypeArray) {
+			attrRef = "assignment_array";
+		} else if (expType instanceof STypeCustom) {
+			attrRef = "assignment_custom";
 		} else {
-			attrRef = "assignment_bool";
+			attrRef = null;
 		}
 		ST localCommandTemplate = this.groupTemplate.getInstanceOf(attrRef);
 		command.getLValueContext().accept(this);
@@ -495,7 +499,6 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(NewPExpression exp) {
-		ST expressionTemplate = groupTemplate.getInstanceOf("new_exp");
 		Type type = exp.getType();
 		int offset = 0;
 		while (type instanceof ArrayType) {
@@ -503,14 +506,26 @@ public class JasminVisitor extends Visitor {
 			ArrayType arrayType = (ArrayType) type;
 			type = arrayType.getType();
 		}
-		type.accept(this);
 
-		expressionTemplate.add("type", this.typeTemplate);
-		expressionTemplate.add("offset", new int[offset]);
+		ST expressionTemplate;
+		if (offset > 0) {
+			expressionTemplate = groupTemplate.getInstanceOf("new_array");
+			expressionTemplate.add("offset", new int[offset]);
+		} else {
+			expressionTemplate = groupTemplate.getInstanceOf("new_object");
+		}
+
+		type.accept(this);
+		String typeString = this.typeTemplate.render();
+		if (exp.getSemanticType() instanceof STypeCustom) {
+			// Remove os caracteres indesejados de uma custom variable;
+			typeString = typeString.substring(1 , typeString.length()- 1);
+		}
+
+		expressionTemplate.add("type", typeString);
 
 		if (exp.getExpression() != null) {
-			exp.getExpression().accept(this);
-			expressionTemplate.add("exp", this.expressionTemplateStack.pop());
+			expressionTemplate.add("size", exp.getIndex());
 		}
 
 		this.expressionTemplateStack.push(expressionTemplate);

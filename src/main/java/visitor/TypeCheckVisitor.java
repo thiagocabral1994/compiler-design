@@ -624,6 +624,7 @@ public class TypeCheckVisitor extends Visitor {
     }
 
     arrayExpression.accept(this);
+    exp.setIndex(this.lastIndex);
     this.testMaxSize();
     SemanticType indexType = this.stack.pop();
 
