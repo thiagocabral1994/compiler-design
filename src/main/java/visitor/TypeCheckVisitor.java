@@ -764,7 +764,8 @@ public class TypeCheckVisitor extends Visitor {
       this.stack.push(this.typeChar);
       return;
     }
-
+    
+    cmd.setLabel(intCount++);
     this.stack.push(lValueType);
   }
 

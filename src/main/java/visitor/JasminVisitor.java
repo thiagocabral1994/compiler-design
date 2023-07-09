@@ -554,6 +554,7 @@ public class JasminVisitor extends Visitor {
 		lvalueLabelTemplate.add("label", pair.getRight());
 		readTemplate.add("lvalue", lvalueLabelTemplate);
 		readTemplate.add("scanner", cmd.getLabel());
+		this.localSize++;
 		this.commandTemplate = readTemplate;
 	}
 

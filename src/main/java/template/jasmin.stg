@@ -82,60 +82,60 @@ invokevirtual java/io/PrintStream/print(C)V
 >>
 
 read_int(lvalue, scanner) ::= <<
-    new java/util/Scanner
-    dup
-    getstatic java/lang/System/in Ljava/io/InputStream;
-    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
-    astore <scanner>
-    aload <scanner>
-    invokevirtual java/util/Scanner/nextInt()I
-    istore <lvalue>
-    aload <scanner>
-    invokevirtual java/util/Scanner/close()V
+new java/util/Scanner
+dup
+getstatic java/lang/System/in Ljava/io/InputStream;
+invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
+astore_<scanner>
+aload_<scanner>
+invokevirtual java/util/Scanner/nextInt()I
+istore_<lvalue>
+aload_<scanner>
+invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_float(lvalue, scanner) ::= <<
-    new java/util/Scanner
-    dup
-    getstatic java/lang/System/in Ljava/io/InputStream;
-    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
-    astore <scanner>
-    aload <scanner>
-    invokevirtual java/util/Scanner/nextFloat()F
-    fstore <lvalue>
-    aload <scanner>
-    invokevirtual java/util/Scanner/close()V
+new java/util/Scanner
+dup
+getstatic java/lang/System/in Ljava/io/InputStream;
+invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
+astore_<scanner>
+aload_<scanner>
+invokevirtual java/util/Scanner/nextFloat()F
+fstore_<lvalue>
+aload_<scanner>
+invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_bool(lvalue, scanner) ::= <<
-    new java/util/Scanner
-    dup
-    getstatic java/lang/System/in Ljava/io/InputStream;
-    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
-    astore <scanner>
-    aload <scanner>
-    invokevirtual java/util/Scanner/nextBoolean()Z
-    istore <lvalue>
-    aload <scanner>
-    invokevirtual java/util/Scanner/close()V
+new java/util/Scanner
+dup
+getstatic java/lang/System/in Ljava/io/InputStream;
+invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
+astore_<scanner>
+aload_<scanner>
+invokevirtual java/util/Scanner/nextBoolean()Z
+istore_<lvalue>
+aload_<scanner>
+invokevirtual java/util/Scanner/close()V
 >>
 
 
 read_char(lvalue, scanner) ::= <<
-    new java/util/Scanner
-    dup
-    getstatic java/lang/System/in Ljava/io/InputStream;
-    invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V
-    astore <scanner>
-    aload <scanner>
-    invokevirtual java/util/Scanner/next()Ljava/lang/String
-    iconst_0
-    invokevirtual java/lang/String/charAt(I)C
-    store <lvalue>
-    aload <scanner>
-    invokevirtual java/util/Scanner/close()V
+new java/util/Scanner
+dup
+getstatic java/lang/System/in Ljava/io/InputStream;
+invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
+astore_<scanner>
+aload_<scanner>
+invokevirtual java/util/Scanner/next()Ljava/lang/String;
+iconst_0
+invokevirtual java/lang/String/charAt(I)C
+istore_<lvalue>
+aload_<scanner>
+invokevirtual java/util/Scanner/close()V
 >>
 
 return(exps, size, size_label) ::= <<
