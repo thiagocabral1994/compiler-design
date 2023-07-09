@@ -251,15 +251,26 @@ lvalue_char(label) ::= <<
 iload_<label>
 >>
 
-array_lvalue(lvalue, exp) ::= <<
-    <exp>
-    <lvalue>
-    iadd
+lvalue_custom(label) ::= <<
+aload_<label>
 >>
 
-object_lvalue(lvalue, name, prefix) ::= <<
-aload <lvalue>
-getfield <prefix><name>
+array_lvalue(index, label, offset_array_lvalue) ::= <<
+aload_<label>
+iconst_<index>
+
+<offset_array_lvalue; separator="\n\n">
+>>
+
+offset_array_lvalue(index) ::= <<
+aaload
+iconst_<index>
+>>
+
+object_lvalue(index, label, type, prefix, attribute) ::= <<
+aload_<label>
+iconst_<index>
+putfield <type>/<prefix><attribute>
 >>
 
 float_exp(value) ::= "ldc <value>"

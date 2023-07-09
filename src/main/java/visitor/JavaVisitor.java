@@ -105,7 +105,8 @@ public class JavaVisitor extends Visitor {
 	@Override
 	public void visit(ArrayType arrayType) {
 		arrayType.getType().accept(this);
-		processSemanticType(STypeArray.create(this.sType));
+		this.sType = STypeArray.create(this.sType);
+		processSemanticType(this.sType);
 	}
 
 	@Override
@@ -120,6 +121,7 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(BooleanBasicType node) {
+		this.sType = STypeBool.create();
 		processSemanticType(STypeBool.create());
 	}
 
@@ -207,12 +209,14 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(CharacterBasicType node) {
+		this.sType = STypeChar.create();
 		processSemanticType(STypeChar.create());
 	}
 
 	@Override
 	public void visit(CustomBasicType type) {
-		processSemanticType(STypeCustom.create(type.getTypeName()));
+		this.sType = STypeChar.create();
+		processSemanticType(this.sType);
 	}
 
 	@Override
@@ -258,6 +262,7 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(FloatBasicType node) {
+		this.sType = STypeFloat.create();
 		processSemanticType(STypeFloat.create());
 	}
 
@@ -278,7 +283,6 @@ public class JavaVisitor extends Visitor {
 		this.localEnv = this.env.get(functionKey);
 
 		List<Type> returnTypes = function.getReturnTypes();
-		// TODO: Encapsular isso pro Jasmin e Java;
 		functionTemplate.add("type", returnTypes.size() > 0 ? "Object[]" : "void");
 
 		this.paramTemplates = new ArrayList<ST>();
@@ -356,7 +360,8 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(IntegerBasicType type) {
-		processSemanticType(STypeInt.create());
+		this.sType = STypeInt.create();
+		processSemanticType(this.sType);
 	}
 
 	@Override
@@ -565,8 +570,6 @@ public class JavaVisitor extends Visitor {
 
 	////////////// Métodos ///////////
 	private void processSemanticType(SemanticType t) {
-		this.sType = t;
-
 		if (t instanceof STypeInt)
 			this.typeTemplate = this.groupTemplate.getInstanceOf("int_type");
 		else if (t instanceof STypeBool)
@@ -585,6 +588,8 @@ public class JavaVisitor extends Visitor {
 			processSemanticType(((STypeArray) t).getType());
 			aux.add("type", this.typeTemplate);
 			this.typeTemplate = aux;
+		} else {
+			this.typeTemplate = null;
 		}
 	}
 
