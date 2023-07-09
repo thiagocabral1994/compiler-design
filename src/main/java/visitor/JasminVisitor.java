@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.Stack;
 
 public class JasminVisitor extends Visitor {
 	private static final String PREFIX = "_";
 	private STGroup groupTemplate;
+	private List<Pair<String, String>> renderedTemplates;
 	private ST programTemplate, typeTemplate, commandTemplate;
 	private SemanticType sType;
-	private List<ST> dataTemplates, functionTemplates, paramTemplates, commandTemplates;
+	private List<ST> functionTemplates, paramTemplates, commandTemplates;
 	private Stack<ST> expressionTemplateStack;
 	private int iteratorCount = 0;
 	private int returnCount = 0;
@@ -36,6 +36,7 @@ public class JasminVisitor extends Visitor {
 
 	public JasminVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
 		this.groupTemplate = new STGroupFile("./template/jasmin.stg");
+		this.renderedTemplates = new ArrayList<>();
 		this.fileName = fileName;
 		this.env = env;
 		this.expressionTemplateStack = new Stack<ST>();
@@ -44,10 +45,11 @@ public class JasminVisitor extends Visitor {
 	}
 
 	public String getProgramTemplate() throws IOException {
-		if (this.programTemplate == null) {
-			throw new IOException("Programa não possui template");
-		}
 		return this.programTemplate.render();
+	}
+
+	public List<Pair<String, String>> getDataTemplates() throws IOException {
+		return this.renderedTemplates;
 	}
 
 	public void visit(Program program) {
@@ -55,15 +57,13 @@ public class JasminVisitor extends Visitor {
 		this.programTemplate.add("name", fileName);
 		this.programTemplate.add("prefix", PREFIX);
 
-		this.dataTemplates = new ArrayList<ST>();
 		for (Data data : program.getDatas()) {
-			// data.accept(this);
+			data.accept(this);
 		}
-		this.programTemplate.add("datas", this.dataTemplates);
 
 		this.functionTemplates = new ArrayList<ST>();
 		for (Function function : program.getFunctions()) {
-			// function.accept(this);
+			function.accept(this);
 		}
 		this.programTemplate.add("functions", this.functionTemplates);
 	}
@@ -193,15 +193,7 @@ public class JasminVisitor extends Visitor {
 	public void visit(CharSExpression exp) {
 		ST expressionTemplate = groupTemplate.getInstanceOf("char_exp");
 		String value = String.valueOf(exp.getValue());
-		if (value.equals("\n"))
-			value = "\\n";
-		else if (value.equals("\t"))
-			value = "\\t";
-		else if (value.equals("\b"))
-			value = "\\b";
-		else if (value.equals("\r"))
-			value = "\\r";
-		expressionTemplate.add("value", value);
+		expressionTemplate.add("value", value.hashCode());
 		this.expressionTemplateStack.push(expressionTemplate);
 	}
 
@@ -219,15 +211,21 @@ public class JasminVisitor extends Visitor {
 	public void visit(Data data) {
 		ST dataTemplate = this.groupTemplate.getInstanceOf("data");
 		dataTemplate.add("name", data.getId());
+		dataTemplate.add("filename", this.fileName);
 		dataTemplate.add("prefix", PREFIX);
 
 		this.paramTemplates = new ArrayList<ST>();
 		for (Parameter param : data.getDeclarations()) {
-			param.accept(this);
+			ST paramTemplate = this.groupTemplate.getInstanceOf("field");
+			paramTemplate.add("name", param.getId());
+			paramTemplate.add("prefix", PREFIX);
+			param.getType().accept(this);
+			paramTemplate.add("type", this.typeTemplate);
+			this.paramTemplates.add(paramTemplate);
 		}
-		dataTemplate.add("declarations", this.paramTemplates);
+		dataTemplate.add("fields", this.paramTemplates);
 
-		this.dataTemplates.add(dataTemplate);
+		this.renderedTemplates.add(new Pair<>(data.getId(), dataTemplate.render()));
 	}
 
 	@Override
@@ -270,36 +268,23 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(Function function) {
-		ST functionTemplate = this.groupTemplate.getInstanceOf("function");
+		ST functionTemplate = this.groupTemplate.getInstanceOf(function.getReturnTypes().size() > 0 ? "function" : "function_void");
 		functionTemplate.add("name", function.getId());
 		functionTemplate.add("prefix", PREFIX);
 
 		STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), function.getFunctionType().getParams());
 		this.localEnv = this.env.get(functionKey);
+		functionTemplate.add("stack", this.localEnv.getMaxStackSize());
+		functionTemplate.add("locals", this.localEnv.getKeys().size()); // TODO: Somar com os iterates
 
-		List<Type> returnTypes = function.getReturnTypes();
-		// TODO: Encapsular isso pro Jasmin e Java;
-		functionTemplate.add("type", returnTypes.size() > 0 ? "Object[]" : "void");
-
-		this.paramTemplates = new ArrayList<ST>();
-		Set<String> keys = this.localEnv.getKeys();
+		List<ST> paramTemplates = new ArrayList<ST>();
 		for (Parameter param : function.getParameters()) {
-			keys.remove(param.getId());
-			param.accept(this);
+			ST paramTemp = this.groupTemplate.getInstanceOf("param");
+			param.getType().accept(this);
+			paramTemp.add("type", this.typeTemplate);
+			paramTemplates.add(paramTemp);
 		}
-		functionTemplate.add("params", this.paramTemplates);
-
-		this.paramTemplates = new ArrayList<ST>();
-		for (String key : keys) {
-			ST paramTemplate = groupTemplate.getInstanceOf("param");
-			paramTemplate.add("name", key);
-			paramTemplate.add("prefix", PREFIX);
-			SemanticType sType = this.localEnv.get(key).getLeft();
-			this.processSemanticType(sType);
-			paramTemplate.add("type", this.typeTemplate);
-			this.paramTemplates.add(paramTemplate);
-		}
-		functionTemplate.add("declarations", this.paramTemplates);
+		functionTemplate.add("params", paramTemplates);
 
 		this.commandTemplates = new ArrayList<ST>();
 		for (Command command : function.getCommands()) {
@@ -484,12 +469,7 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(Parameter param) {
-		ST paramTemplate = this.groupTemplate.getInstanceOf("param");
-		paramTemplate.add("name", param.getId());
-		paramTemplate.add("prefix", PREFIX);
-		param.getType().accept(this);
-		paramTemplate.add("type", this.typeTemplate);
-		this.paramTemplates.add(paramTemplate);
+		// Ignora
 	}
 
 	@Override
@@ -502,8 +482,20 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(PrintCommand command) {
-		command.getExpression().accept(this);
-		ST printTemplate = groupTemplate.getInstanceOf("print");
+		Expression exp = command.getExpression();
+		exp.accept(this);
+		SemanticType expType = exp.getSemanticType();
+		String  templateRef;
+		if (expType instanceof STypeInt) {
+			templateRef = "print_int";
+		} else if (expType instanceof STypeFloat) {
+			templateRef = "print_float";
+		} else if (expType instanceof STypeChar) {
+			templateRef = "print_char";
+		} else {
+			templateRef = "print_bool";
+		}
+		ST printTemplate = groupTemplate.getInstanceOf(templateRef);
 		printTemplate.add("exp", this.expressionTemplateStack.pop());
 		this.commandTemplate = printTemplate;
 	}
@@ -578,6 +570,7 @@ public class JasminVisitor extends Visitor {
 		else if (t instanceof STypeCustom) {
 			ST aux = this.groupTemplate.getInstanceOf("custom_type");
 			aux.add("prefix", PREFIX);
+			aux.add("filename", this.fileName);
 			aux.add("name", t.toString());
 			this.typeTemplate = aux;
 		} else if (t instanceof STypeArray) {

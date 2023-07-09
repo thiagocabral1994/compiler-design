@@ -1,12 +1,10 @@
 group jasmin;
 
-program(name, datas, functions, prefix) ::= <<
-.source <prefix><name>.java
+; feito
+program(name, functions, prefix) ::= <<
+.source <prefix><name>
 .class public output/<prefix><name>
 .super java/lang/Object
-
-    <datas; separator="\n\n">
-
     <functions; separator="\n\n">
 
     .method public static main([Ljava/lang/String;)V
@@ -14,59 +12,89 @@ program(name, datas, functions, prefix) ::= <<
         invokestatic output/<prefix><name>/<prefix>main()V
         return
     .end method
-
 >>
 
-data(name, declarations, prefix) ::= <<
-.class public static <prefix><name>
+; feito
+data(filename, name, fields, prefix) ::= <<
+.source <prefix><filename>
+.class public output/<prefix><filename>$<prefix><name>
 .super java/lang/Object
-    <declarations; separator=";\n">
-.end class
+    <fields; separator="\n">
+
+    .method \<init>()V
+        .limit stack 1
+        .limit locals 1
+        aload_0
+        invokespecial java/lang/Object/\<init>()V
+        return
+    .end method
 >>
 
-field(type, name, prefix) ::= ".field public <prefix><name> <type>"
+; feito
+field(type, name, prefix) ::= ".field <prefix><name> <type>"
+; feito
 param(type) ::= "<type>"
 
-function(type, name, prefix, params, declarations, commands) ::= <<
-.method static <prefix><name>(<params>)<return>
+; feito
+function_void(name, prefix, params, locals, commands, stack) ::= <<
+.method static <prefix><name>(<params>)V
     .limit stack <stack>
-    .limit locals <declarations>
+    .limit locals <locals>
     
     <if(commands)><commands; separator="\n\n"><endif>
-
-    <if(type == "V")>return<endif>
+    return
 .end method
 >>
 
-array_type(type) ::= "[<type>"
-int_type() ::= "I"
-float_type() ::= "F"
-boolean_type() ::= "Z"
-char_type() ::= "C"
-custom_type(name, prefix) ::= "Loutput/<prefix><name>"
+; feito
+function(name, prefix, params, locals, commands, stack) ::= <<
+.method static <prefix><name>(<params>)[Ljava/lang/Object
+    .limit stack <stack>
+    .limit locals <locals>
+    
+    <if(commands)><commands; separator="\n\n"><endif>
+.end method
+>>
 
+; feito
+array_type(type) ::= "[<type>"
+; feito
+int_type() ::= "I"
+; feito
+float_type() ::= "F"
+; feito
+boolean_type() ::= "Z"
+; feito
+char_type() ::= "C"
+; feito
+custom_type(filename, name, prefix) ::= "Loutput/<prefix><filename>$<prefix><name>;"
+
+; feito
 print_int(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
-invokervirtual java/io/PrintStream/print(I)V
+invokevirtual java/io/PrintStream/print(I)V
 >>
 
+; feito
 print_float(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
-invokervirtual java/io/PrintStream/print(F)V
+invokevirtual java/io/PrintStream/print(F)V
 >>
 
+; feito
 print_bool(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
-invokervirtual java/io/PrintStream/print(Z)V
+invokevirtual java/io/PrintStream/print(Z)V
 >>
 
+; feito
 print_char(exp) ::= <<
 getstatic java/lang/System/out Ljava/io/PrintStream;
 <exp>
-invokervirtual java/io/PrintStream/print(C)V
+invokevirtual java/io/PrintStream/print(C)V
 >>
 
 read_int(lvalue, scanner) ::= <<
@@ -196,7 +224,7 @@ getfield <prefix><name>
 
 float_exp(value) ::= "ldc <value>"
 int_exp(value) ::= "sipush <value>"
-char_exp(value) ::= "ldc '<value>'"
+char_exp(value) ::= "bipush <value>"
 null_exp() ::= "aconst_null"
 true_exp() ::= "iconst_1"
 false_exp() ::= "iconst_0"

@@ -43,8 +43,13 @@ public class TypeCheckVisitor extends Visitor {
     return this.logError.size();
   }
 
-  public Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> getEnv() { return this.env; }
-  public Map<String, Map<String, SemanticType>> getDataMap() { return this.dataMap; }
+  public Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> getEnv() {
+    return this.env;
+  }
+
+  public Map<String, Map<String, SemanticType>> getDataMap() {
+    return this.dataMap;
+  }
 
   public void printErrors() {
     for (String string : this.logError) {
@@ -53,25 +58,28 @@ public class TypeCheckVisitor extends Visitor {
   }
 
   private void typeArithmeticBinOp(Expression n, String opName) {
+    this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
 
-    if( (right.match(typeInt) ) || right.match(typeChar)){
-        if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
-          this.stack.push(left);
-          n.setSemanticType(left);
-        }else{
-          logError.add( n.getLine() + ", " + n.getCol() + ": Operador" + opName +"não se aplica aos tipos " + left.toString() + " e " + right.toString() );
-          this.stack.push(typeError);
-        }
-    }else if(right.match(typeFloat)){
-      if(left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)){
-          this.stack.push(right);
-          n.setSemanticType(right);
-      }else{
-          logError.add( n.getLine() + ", " + n.getCol() + ": Operador " + opName +" não se aplica aos tipos " + left.toString() + " e " + right.toString() );
-          this.stack.push(typeError);
+    if ((right.match(typeInt)) || right.match(typeChar)) {
+      if (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)) {
+        this.stack.push(left);
+        n.setSemanticType(left);
+      } else {
+        logError.add(n.getLine() + ", " + n.getCol() + ": Operador" + opName + "não se aplica aos tipos "
+            + left.toString() + " e " + right.toString());
+        this.stack.push(typeError);
+      }
+    } else if (right.match(typeFloat)) {
+      if (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar)) {
+        this.stack.push(right);
+        n.setSemanticType(right);
+      } else {
+        logError.add(n.getLine() + ", " + n.getCol() + ": Operador " + opName + " não se aplica aos tipos "
+            + left.toString() + " e " + right.toString());
+        this.stack.push(typeError);
       }
     } else {
       logError.add(n.getLine() + ", " + n.getCol() + ": Operador " + opName + " não se aplica aos tipos "
@@ -91,6 +99,7 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(AndExpression exp) {
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
@@ -98,9 +107,9 @@ public class TypeCheckVisitor extends Visitor {
     if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador && não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador && não se aplica aos tipos " + left.toString()
+          + " e " + right.toString());
       this.stack.push(typeError);
     }
   }
@@ -108,6 +117,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(ArrayLValue lvalue) {
     lvalue.getExpression().accept(this);
+    this.testMaxSize();
     SemanticType indexType = this.stack.pop();
 
     if (!indexType.match(this.typeInt)) {
@@ -118,6 +128,7 @@ public class TypeCheckVisitor extends Visitor {
     }
 
     lvalue.getLValue().accept(this);
+    this.testMaxSize();
     SemanticType lValueType = this.stack.pop();
 
     if (!(lValueType instanceof STypeArray)) {
@@ -135,6 +146,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(ArrayType arrayType) {
     arrayType.getType().accept(this);
+    this.testMaxSize();
     this.stack.push(STypeArray.create(this.stack.pop()));
   }
 
@@ -142,18 +154,22 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(AssignmentCommand cmd) {
     Expression exp = cmd.getExpression();
     cmd.getExpression().accept(this);
+    this.testMaxSize();
     SemanticType expressionType = this.stack.pop();
 
-    // Caso expressionType seja nulo, podemos concluir que análise semântica que o dado
+    // Caso expressionType seja nulo, podemos concluir que análise semântica que o
+    // dado
     // Não foi inicializado.
     if (exp instanceof LValueContext && expressionType.match(this.typeNull)) {
-      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível acessar valor de " + expressionType.toString());
+      this.logError
+          .add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível acessar valor de " + expressionType.toString());
       this.stack.push(this.typeError);
       return;
     }
 
     LValueContext lvalueContext = cmd.getLValueContext();
     lvalueContext.accept(this);
+    this.testMaxSize();
     SemanticType lValueType = this.stack.pop();
 
     // Caso LValue seja nulo, podemos concluir que análise semântica que o dado
@@ -181,16 +197,18 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(BooleanBasicType node) {
     this.stack.push(this.typeBool);
+    this.testMaxSize();
   }
 
   @Override
   public void visit(CallCommand cmd) {
     String id = cmd.getId();
-    
+
     List<Expression> expressions = cmd.getExpressions();
     List<SemanticType> argTypes = new ArrayList<>();
     for (int i = 0; i < expressions.size(); i++) {
       expressions.get(i).accept(this);
+      this.testMaxSize();
       SemanticType expressionType = this.stack.pop();
       argTypes.add(expressionType);
     }
@@ -198,9 +216,10 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunctionKey functionKey = STypeFunctionKey.create(cmd.getId(), argTypes);
     LocalEnv<Pair<SemanticType, Integer>> localEnv = this.env.get(functionKey);
 
-    if(localEnv == null) {
+    if (localEnv == null) {
       this.stack.push(this.typeError);
-      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função " + id + "com argumentos fornecidos não existe!");
+      this.logError
+          .add(cmd.getLine() + ", " + cmd.getCol() + ": Função " + id + "com argumentos fornecidos não existe!");
       return;
     }
 
@@ -210,7 +229,8 @@ public class TypeCheckVisitor extends Visitor {
     int actualAmountOfReturns = cmd.getReturnLValueContexts().size();
     if (actualAmountOfReturns > expectedAmountOfReturns) {
       this.stack.push(this.typeError);
-      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas recebeu " + actualAmountOfReturns + " retornos!");
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns
+          + " retornos, mas recebeu " + actualAmountOfReturns + " retornos!");
       return;
     }
 
@@ -218,6 +238,7 @@ public class TypeCheckVisitor extends Visitor {
     List<LValueContext> lvalueCtx = cmd.getReturnLValueContexts();
     for (int i = 0; i < lvalueCtx.size(); i++) {
       lvalueCtx.get(i).accept(this);
+      this.testMaxSize();
       SemanticType lValueType = this.stack.pop();
 
       if (lValueType.match(this.typeNull)) {
@@ -225,8 +246,9 @@ public class TypeCheckVisitor extends Visitor {
         this.activeScope.set(headId, new Pair<>(returnTypes.get(i), this.intCount++));
         this.stack.push(returnTypes.get(i));
       } else if (!returnTypes.get(i).match(lValueType)) {
-        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível atribuir " + returnTypes.get(i).toString()
-            + " a " + lValueType.toString());
+        this.logError
+            .add(cmd.getLine() + ", " + cmd.getCol() + ": Não é possível atribuir " + returnTypes.get(i).toString()
+                + " a " + lValueType.toString());
       }
     }
   }
@@ -238,6 +260,7 @@ public class TypeCheckVisitor extends Visitor {
     List<SemanticType> argTypes = new ArrayList<>();
     for (int i = 0; i < exp.getParamExpressions().size(); i++) {
       exp.getParamExpressions().get(i).accept(this);
+      this.testMaxSize();
       SemanticType expressionType = this.stack.pop();
       argTypes.add(expressionType);
     }
@@ -245,45 +268,47 @@ public class TypeCheckVisitor extends Visitor {
     STypeFunctionKey functionKey = STypeFunctionKey.create(id, argTypes);
     LocalEnv<Pair<SemanticType, Integer>> localEnv = env.get(functionKey);
 
-    if(localEnv == null){
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Chamada a função não declarada com argumentos: " + exp.getID());
+    if (localEnv == null) {
+      logError
+          .add(exp.getLine() + ", " + exp.getCol() + ": Chamada a função não declarada com argumentos: " + exp.getID());
       this.stack.push(typeError);
       return;
     }
 
     exp.getBracketExpression().accept(this);
+    this.testMaxSize();
 
     STypeFunction typeFunction = localEnv.getFunctionType();
-    if(this.stack.pop().match(typeInt)) {
+    if (this.stack.pop().match(typeInt)) {
       int index = this.lastIndex;
       if (index >= 0 && typeFunction.getReturnTypes().size() > index) {
         SemanticType returnIndexType = typeFunction.getReturnTypes().get(index);
         this.stack.push(returnIndexType);
         exp.setSemanticType(returnIndexType);
-      }
-      else {
-        logError.add( exp.getLine() + ", " + exp.getCol() + ": Posição " + index + " de retorno da função " + exp.getID() + " não encontrada. ");
+      } else {
+        logError.add(exp.getLine() + ", " + exp.getCol() + ": Posição " + index + " de retorno da função " + exp.getID()
+            + " não encontrada. ");
         this.stack.push(typeError);
         return;
       }
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Tipo de acesso ao retorno da função deve ser inteiro. ");
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Tipo de acesso ao retorno da função deve ser inteiro. ");
       this.stack.push(typeError);
     }
 
   }
 
-
   @Override
   public void visit(CharSExpression exp) {
     this.stack.push(this.typeChar);
+    this.testMaxSize();
     exp.setSemanticType(this.typeChar);
   }
 
   @Override
   public void visit(CharacterBasicType node) {
     this.stack.push(this.typeChar);
+    this.testMaxSize();
   }
 
   @Override
@@ -294,6 +319,7 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
     this.stack.push(STypeCustom.create(name));
+    this.testMaxSize();
   }
 
   @Override
@@ -308,6 +334,7 @@ public class TypeCheckVisitor extends Visitor {
 
     for (Parameter declaration : data.getDeclarations()) {
       declaration.accept(this);
+      this.testMaxSize();
       declarationsMap.put(declaration.getId(), this.stack.pop());
     }
   }
@@ -323,19 +350,21 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(EqualityRExpression exp) {
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
 
-    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+    if ((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar))
+        && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
     } else if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador == não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador == não se aplica aos tipos " + left.toString()
+          + " e " + right.toString());
       this.stack.push(typeError);
     }
   }
@@ -343,6 +372,7 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(FalseSExpression node) {
     this.stack.push(this.typeBool);
+    this.testMaxSize();
     node.setSemanticType(typeBool);
   }
 
@@ -363,6 +393,7 @@ public class TypeCheckVisitor extends Visitor {
     List<SemanticType> paramTypes = new ArrayList<>();
     for (Parameter parameter : function.getParameters()) {
       parameter.getType().accept(this);
+      this.testMaxSize();
       paramTypes.add(this.stack.pop());
     }
     STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), paramTypes);
@@ -374,6 +405,7 @@ public class TypeCheckVisitor extends Visitor {
 
     for (Command cmd : function.getCommands()) {
       cmd.accept(this);
+      this.testMaxSize();
     }
 
     if (function.getReturnTypes().size() > 0 && !this.returnCheck) {
@@ -397,6 +429,7 @@ public class TypeCheckVisitor extends Visitor {
       this.stack.push(lvalueTypePair.getLeft());
       lvalue.setSemanticType(lvalueTypePair.getLeft());
     }
+    this.testMaxSize();
   }
 
   @Override
@@ -440,19 +473,21 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(InequalityRExpression exp) {
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
 
-    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+    if ((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar))
+        && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
     } else if (right.match(typeBool) && left.match(typeBool)) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador != não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador != não se aplica aos tipos " + left.toString()
+          + " e " + right.toString());
       this.stack.push(typeError);
     }
   }
@@ -467,6 +502,7 @@ public class TypeCheckVisitor extends Visitor {
     this.stack.push(this.typeInt);
     this.lastIndex = node.getValue();
     node.setSemanticType(typeInt);
+    this.testMaxSize();
   }
 
   @Override
@@ -485,16 +521,18 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(LessRExpression exp) {
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
 
-    if((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar)) && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
+    if ((right.match(typeInt) || right.match(typeFloat) || right.match(typeChar))
+        && (left.match(typeInt) || left.match(typeFloat) || left.match(typeChar))) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador < não se aplica aos tipos " + left.toString() + " e " + right.toString() );
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador < não se aplica aos tipos " + left.toString()
+          + " e " + right.toString());
       this.stack.push(typeError);
     }
   }
@@ -523,14 +561,14 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(NegationSExpression exp) {
     exp.getSExpression().accept(this);
+    this.testMaxSize();
     SemanticType type = this.stack.pop();
 
-    if(type.match(typeBool)) {
+    if (type.match(typeBool)) {
       this.stack.push(typeBool);
       exp.setSemanticType(typeBool);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
       this.stack.push(typeError);
     }
   }
@@ -538,17 +576,16 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(NegativeSExpression exp) {
     exp.getSExpression().accept(this);
+    this.testMaxSize();
     SemanticType type = this.stack.pop();
-    if(type.match(typeInt) || type.match(typeChar)) {
+    if (type.match(typeInt) || type.match(typeChar)) {
       this.stack.push(typeInt);
       exp.setSemanticType(typeInt);
-    }
-    else if(type.match(typeFloat)) {
+    } else if (type.match(typeFloat)) {
       this.stack.push(typeFloat);
       exp.setSemanticType(typeFloat);
-    }
-    else {
-      logError.add( exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
+    } else {
+      logError.add(exp.getLine() + ", " + exp.getCol() + ": Operador ! não se aplica ao tipo " + type.toString());
       this.stack.push(typeError);
     }
   }
@@ -556,8 +593,8 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(NewPExpression exp) {
     exp.getType().accept(this);
-    
-    if(this.stack.empty()) {
+
+    if (this.stack.empty()) {
       this.stack.push(this.typeError);
       return;
     }
@@ -566,7 +603,7 @@ public class TypeCheckVisitor extends Visitor {
     Expression arrayExpression = exp.getExpression();
 
     if (baseType instanceof STypeError || (!this.dataMap.containsKey(baseType.toString()) && arrayExpression == null)) {
-      this.logError.add(exp.getLine() + ", " + exp.getCol() + ": Tipo " + baseType +" de data não existe!");
+      this.logError.add(exp.getLine() + ", " + exp.getCol() + ": Tipo " + baseType + " de data não existe!");
       this.stack.push(this.typeError);
       return;
     }
@@ -578,6 +615,7 @@ public class TypeCheckVisitor extends Visitor {
     }
 
     arrayExpression.accept(this);
+    this.testMaxSize();
     SemanticType indexType = this.stack.pop();
 
     if (!indexType.match(this.typeInt)) {
@@ -596,11 +634,13 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(NullSExpression node) {
     this.stack.push(this.typeNull);
     node.setSemanticType(typeNull);
+    this.testMaxSize();
   }
 
   @Override
   public void visit(ObjectLValue lvalue) {
     lvalue.getLValue().accept(this);
+    this.testMaxSize();
     SemanticType lvalueType = this.stack.pop();
 
     STypeCustom customSType = null;
@@ -647,12 +687,14 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(ParenthesisPExpression node) {
     Expression exp = node.getExpression();
     exp.accept(this);
+    this.testMaxSize();
     node.setSemanticType(exp.getSemanticType());
   }
 
   @Override
   public void visit(PrintCommand cmd) {
     cmd.getExpression().accept(this);
+    this.testMaxSize(this.stack.size() + 1);
     this.stack.pop();
   }
 
@@ -708,6 +750,7 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(ReadCommand cmd) {
     LValueContext lvalueContext = cmd.getLValue();
     lvalueContext.accept(this);
+    this.testMaxSize();
     SemanticType lValueType = this.stack.pop();
 
     if (lValueType.match(this.typeNull)) {
@@ -735,16 +778,19 @@ public class TypeCheckVisitor extends Visitor {
 
     if (actualAmountOfReturns != expectedAmountOfReturns) {
       this.stack.push(this.typeError);
-      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns + " retornos, mas retorna " + actualAmountOfReturns + " valores!");
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + ": Função espera " + expectedAmountOfReturns
+          + " retornos, mas retorna " + actualAmountOfReturns + " valores!");
       return;
     }
 
     List<SemanticType> argTypes = funcType.getReturnTypes();
     for (int i = 0; i < returnExpressions.size(); i++) {
       returnExpressions.get(i).accept(this);
+      this.testMaxSize();
       SemanticType expressionType = this.stack.pop();
       if (!argTypes.get(i).match(expressionType)) {
-        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Retorno " + (i + 1) + " espera " + argTypes.get(i).toString() + " mas recebeu " + expressionType); 
+        this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Retorno " + (i + 1) + " espera "
+            + argTypes.get(i).toString() + " mas recebeu " + expressionType);
       }
     }
   }
@@ -760,13 +806,31 @@ public class TypeCheckVisitor extends Visitor {
   public void visit(TrueSExpression node) {
     this.stack.push(this.typeBool);
     node.setSemanticType(typeBool);
+    this.testMaxSize();
   }
 
   @Override
   public void visit(LValueContext context) {
     LValue lvalue = context.getLValue();
     lvalue.accept(this);
+    this.testMaxSize();
     context.setSemanticType(lvalue.getSemanticType());
+  }
+
+  private void testMaxSize() {
+    this.testMaxSize(this.stack.size());
+  }
+
+  private void testMaxSize(int overwrite) {
+    if (this.activeScope == null) {
+      return;
+    }
+
+    if (this.stack == null) {
+      this.activeScope.assertMaxStackSize(0);
+      return;
+    }
+    this.activeScope.assertMaxStackSize(overwrite);
   }
 
 }

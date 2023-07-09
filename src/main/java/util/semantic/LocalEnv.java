@@ -3,6 +3,7 @@ package util.semantic;
 public class LocalEnv<A> extends TypeEnv<A> {
   private String id;
   private STypeFunction type;
+  private int maxStackSize = 0;
 
   public LocalEnv(String id, STypeFunction type) {
     this.type = type;
@@ -15,6 +16,14 @@ public class LocalEnv<A> extends TypeEnv<A> {
 
   public STypeFunction getFunctionType() {
     return this.type;
+  }
+
+  public int getMaxStackSize() {
+    return this.maxStackSize;
+  }
+
+  public void assertMaxStackSize(int size) {
+    this.maxStackSize = size > this.maxStackSize ? size : this.maxStackSize;
   }
 
   public String toString() {
