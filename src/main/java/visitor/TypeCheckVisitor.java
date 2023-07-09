@@ -29,6 +29,7 @@ public class TypeCheckVisitor extends Visitor {
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
+  private boolean printCheck;
 
   private int intCount;
 
@@ -698,8 +699,9 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(PrintCommand cmd) {
+    this.printCheck = true;
     cmd.getExpression().accept(this);
-    this.testMaxSize(this.stack.size() > 1 ? this.stack.size() : 2);
+    this.printCheck = false;
     this.stack.pop();
   }
 
@@ -776,6 +778,7 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
     this.returnCheck = true;
+    cmd.setLabel(this.intCount++);
     STypeFunction funcType = this.activeScope.getFunctionType();
     List<Expression> returnExpressions = cmd.getReturnExpressions();
 
@@ -835,6 +838,10 @@ public class TypeCheckVisitor extends Visitor {
     if (this.stack == null) {
       this.activeScope.assertMaxStackSize(0);
       return;
+    }
+
+    if (this.printCheck) {
+      this.activeScope.assertMaxStackSize(overwrite + 1);
     }
     this.activeScope.assertMaxStackSize(overwrite);
   }
