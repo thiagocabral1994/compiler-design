@@ -319,13 +319,13 @@ astore_<return_size>
 <return_attr; separator="\n\n">
 >>
 
-call_return_attr(return_size, store, index, cast) ::= <<
+call_return_attr(return_size, store, index, cast, return_label) ::= <<
 ; Atribuição do retorno da função
 aload_<return_size>
 iconst_<index>
 aaload
 <cast>
-<store>_<index>
+<store>_<return_label>
 >>
 
 call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= <<

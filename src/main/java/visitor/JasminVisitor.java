@@ -151,9 +151,12 @@ public class JasminVisitor extends Visitor {
 			attrRef = "assignment_array";
 		} else if (expType instanceof STypeCustom) {
 			attrRef = "assignment_custom";
+		} else if (expType instanceof STypeBool) {
+			attrRef = "assignment_bool";
 		} else {
 			attrRef = null;
 		}
+
 		ST localCommandTemplate = this.groupTemplate.getInstanceOf(attrRef);
 		command.getLValueContext().accept(this);
 		Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
@@ -190,9 +193,11 @@ public class JasminVisitor extends Visitor {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_return");
 			List<ST> callAssigments = new ArrayList<ST>();
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
+				Pair<SemanticType, Integer> pair = this.localEnv.get(cmd.getReturnLValueContexts().get(i).getLValue().getHeadId());
 				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_attr");
 				callAssigment.add("return_size", cmd.getReturnLValueContexts().size());
 				callAssigment.add("index", i);
+				callAssigment.add("return_label", pair.getRight()+1);
 				SemanticType returnType = sTyFunc.getReturnTypes().get(i);
 				String templateRef;
 				if (returnType instanceof STypeInt) {
