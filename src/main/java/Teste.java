@@ -4,6 +4,7 @@
  */
 
 import parser.*;
+import util.Pair;
 import ast.*;
 import visitor.*;
 
@@ -13,6 +14,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 public class Teste {
      public static final boolean DEBUG = true;
@@ -48,7 +50,6 @@ public class Teste {
                throw new IOException("Erro na análise semântica");
           }
 
-          String generatedCode;
           switch (args[1]) {
                case "i":
                     InterpretVisitor interpretVisitor = new InterpretVisitor();
@@ -58,14 +59,18 @@ public class Teste {
                     JasminVisitor jasminVisitor = new JasminVisitor(OUTPUT_NAME, typeChecker.getEnv(),
                               typeChecker.getDataMap());
                     tree.accept(jasminVisitor);
-                    generatedCode = jasminVisitor.getProgramTemplate();
-                    writeProgram(generatedCode, "_" + OUTPUT_NAME + ".j");
+                    String programCode = jasminVisitor.getProgramTemplate();
+                    writeProgram(programCode, "_" + OUTPUT_NAME + ".j");
+                    List<Pair<String, String>> generatedCodes = jasminVisitor.getDataTemplates();
+                    for (Pair<String, String> generatedCode : generatedCodes) {
+                         writeProgram(generatedCode.getRight(), "_" + OUTPUT_NAME + "&_" + generatedCode.getLeft() + ".j");
+                    }
                     break;
                case "s":
                     JavaVisitor javaVisitor = new JavaVisitor(OUTPUT_NAME, typeChecker.getEnv(),
                               typeChecker.getDataMap());
                     tree.accept(javaVisitor);
-                    generatedCode = javaVisitor.getProgramTemplate();
+                    String generatedCode = javaVisitor.getProgramTemplate();
                     writeProgram(generatedCode, "_" + OUTPUT_NAME + ".java");
                     break;
                default:

@@ -18,6 +18,10 @@ runAnalyzer:
 		java -jar classfileanalyzer.jar $$file > $$file.teste.j; \
 	done
 
+runJasmin:
+	java -jar jasmin.jar output/*.j
+	java output._Program
+
 clean: 
 	rm -fr src/main/java/parser/.antlr
 	rm -f src/main/java/parser/ParserParser.java
