@@ -530,21 +530,29 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(ReadCommand cmd) {
 		cmd.getLValue().accept(this);
-		SemanticType sType = this.lvalueTypeStack.pop();
+		Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
+		
+		SemanticType sType = pair.getLeft();
 
-		ST cmdTemplate;
-		if (sType instanceof STypeInt)
-			cmdTemplate = this.groupTemplate.getInstanceOf("read_int");
-		else if (sType instanceof STypeFloat)
-			cmdTemplate = this.groupTemplate.getInstanceOf("read_float");
-		else if (sType instanceof STypeBool)
-			cmdTemplate = this.groupTemplate.getInstanceOf("read_bool");
-		else
-			cmdTemplate = this.groupTemplate.getInstanceOf("read_char");
 
-		cmdTemplate.add("lvalue", this.expressionTemplateStack.pop());
-		cmdTemplate.add("scanner", "scanner" + (this.scannerCount++));
-		this.commandTemplate = cmdTemplate;
+		String  templateRef;
+		if (sType instanceof STypeInt) {
+			templateRef = "read_int";
+		} else if (sType instanceof STypeFloat) {
+			templateRef = "read_float";
+		} else if (sType instanceof STypeChar) {
+			templateRef = "read_char";
+		} else {
+			templateRef = "read_bool";
+		}
+
+		ST readTemplate = groupTemplate.getInstanceOf(templateRef);
+
+		ST lvalueLabelTemplate = this.groupTemplate.getInstanceOf("lvalue_label");
+		lvalueLabelTemplate.add("label", pair.getRight());
+		readTemplate.add("lvalue", lvalueLabelTemplate);
+		readTemplate.add("scanner", cmd.getLabel());
+		this.commandTemplate = readTemplate;
 	}
 
 	@Override
