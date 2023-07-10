@@ -24,7 +24,7 @@ public class JavaVisitor extends Visitor {
 	private Stack<ST> expressionTemplateStack;
 	private int iteratorCount = 0;
 	private int returnCount = 0;
-	private int scannerCount = 0;
+	private boolean hasScanner = false;
 	private int lastIndex;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 
@@ -34,7 +34,8 @@ public class JavaVisitor extends Visitor {
 	private Map<String, Map<String, SemanticType>> dataMap;
 	private Stack<SemanticType> lvalueTypeStack;
 
-	public JavaVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env, Map<String, Map<String, SemanticType>> map) {
+	public JavaVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env,
+			Map<String, Map<String, SemanticType>> map) {
 		this.groupTemplate = new STGroupFile("./template/java.stg");
 		this.fileName = fileName;
 		this.env = env;
@@ -66,6 +67,10 @@ public class JavaVisitor extends Visitor {
 			function.accept(this);
 		}
 		this.programTemplate.add("functions", this.functionTemplates);
+
+		if (this.hasScanner) {
+			this.programTemplate.add("scanner", this.groupTemplate.getInstanceOf("scanner"));
+		}
 	}
 
 	@Override
@@ -528,7 +533,7 @@ public class JavaVisitor extends Visitor {
 			cmdTemplate = this.groupTemplate.getInstanceOf("read_char");
 
 		cmdTemplate.add("lvalue", this.expressionTemplateStack.pop());
-		cmdTemplate.add("scanner", "scanner" + (this.scannerCount++));
+		this.hasScanner = true;
 		this.commandTemplate = cmdTemplate;
 	}
 

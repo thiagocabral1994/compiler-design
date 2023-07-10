@@ -29,9 +29,10 @@ public class TypeCheckVisitor extends Visitor {
 
   private Stack<SemanticType> stack;
   private boolean returnCheck;
-  private boolean printCheck;
+  
 
   private int intCount;
+  private int maxStackOffset;
 
   public TypeCheckVisitor() {
     this.stack = new Stack<>();
@@ -408,6 +409,7 @@ public class TypeCheckVisitor extends Visitor {
 
     this.activeScope = env.get(functionKey);
     this.intCount = 0;
+    this.maxStackOffset = 0;
     for (int i = 0; i < function.getParameters().size(); i++) {
       this.activeScope.set(function.getParameters().get(i).getId(), new Pair<>(paramTypes.get(i), this.intCount++));
     }
@@ -707,9 +709,9 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(PrintCommand cmd) {
-    this.printCheck = true;
+    this.maxStackOffset++;
     cmd.getExpression().accept(this);
-    this.printCheck = false;
+    this.maxStackOffset--;
     if (this.stack.pop().match(typeNull)) {
       this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Não pode printar valor null");
       this.stack.push(this.typeError);
@@ -767,7 +769,9 @@ public class TypeCheckVisitor extends Visitor {
   @Override
   public void visit(ReadCommand cmd) {
     LValueContext lvalueContext = cmd.getLValue();
+    this.maxStackOffset++;
     lvalueContext.accept(this);
+    this.maxStackOffset--;
     this.testMaxSize();
     SemanticType lValueType = this.stack.pop();
 
@@ -851,10 +855,7 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
 
-    if (this.printCheck) {
-      this.activeScope.assertMaxStackSize(overwrite + 1);
-    }
-    this.activeScope.assertMaxStackSize(overwrite);
+    this.activeScope.assertMaxStackSize(overwrite + this.maxStackOffset);
   }
 
 }

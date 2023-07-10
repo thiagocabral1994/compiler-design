@@ -30,6 +30,7 @@ public class JasminVisitor extends Visitor {
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 	private int localSize;
 	private Stack<Pair<SemanticType, Integer>> lvaluePairStack;
+	private boolean hasScanner = false;
 
 	private String fileName;
 
@@ -67,6 +68,9 @@ public class JasminVisitor extends Visitor {
 			function.accept(this);
 		}
 		this.programTemplate.add("functions", this.functionTemplates);
+		if (this.hasScanner) {
+			this.programTemplate.add("scanner", this.groupTemplate.getInstanceOf("scanner"));
+		}
 	}
 
 	@Override
@@ -454,7 +458,7 @@ public class JasminVisitor extends Visitor {
 		}
 		functionTemplate.add("commands", this.commandTemplates);
 
-		functionTemplate.add("stack", 100/* this.localEnv.getMaxStackSize() */); // TODO
+		functionTemplate.add("stack", this.localEnv.getMaxStackSize());
 		functionTemplate.add("locals", this.localSize);
 		this.functionTemplates.add(functionTemplate);
 	}
@@ -812,7 +816,9 @@ public class JasminVisitor extends Visitor {
 		ST readTemplate = groupTemplate.getInstanceOf(templateRef);
 
 		readTemplate.add("lvalue", pair.getRight());
-		readTemplate.add("scanner", cmd.getLabel());
+		readTemplate.add("prefix", PREFIX);
+		readTemplate.add("filename", this.fileName);
+		this.hasScanner = true;
 		this.localSize++;
 		this.commandTemplate = readTemplate;
 	}

@@ -1,9 +1,11 @@
 group jasmin;
 
-program(name, functions, prefix) ::= <<
+program(name, functions, prefix, scanner) ::= <<
 .source <prefix><name>
 .class public output/<prefix><name>
 .super java/lang/Object
+    <scanner>
+
     <functions; separator="\n\n">
 
     .method public static main([Ljava/lang/String;)V
@@ -11,6 +13,22 @@ program(name, functions, prefix) ::= <<
         invokestatic output/<prefix><name>/<prefix>main()V
         return
     .end method
+>>
+
+scanner() ::= <<
+.field static final scan Ljava/util/Scanner;
+
+.method static \<clinit>()V
+  .limit stack 3
+  .limit locals 0
+
+  new java/util/Scanner
+  dup
+  getstatic java/lang/System/in Ljava/io/InputStream;
+  invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
+  putstatic output/_Program/scan Ljava/util/Scanner;
+  return
+.end method
 >>
 
 data(filename, name, fields, prefix) ::= <<
@@ -81,61 +99,33 @@ getstatic java/lang/System/out Ljava/io/PrintStream;
 invokevirtual java/io/PrintStream/print(C)V
 >>
 
-read_int(lvalue, scanner) ::= <<
-new java/util/Scanner
-dup
-getstatic java/lang/System/in Ljava/io/InputStream;
-invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore <scanner>
-aload <scanner>
+read_int(lvalue, prefix, filename) ::= <<
+getstatic output/<prefix><filename>/scan Ljava/util/Scanner;
 invokevirtual java/util/Scanner/nextInt()I
 istore <lvalue>
-aload <scanner>
-invokevirtual java/util/Scanner/close()V
 >>
 
 
-read_float(lvalue, scanner) ::= <<
-new java/util/Scanner
-dup
-getstatic java/lang/System/in Ljava/io/InputStream;
-invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore <scanner>
-aload <scanner>
+read_float(lvalue, prefix, filename) ::= <<
+getstatic output/<prefix><filename>/scan Ljava/util/Scanner;
 invokevirtual java/util/Scanner/nextFloat()F
 fstore_<lvalue>
-aload <scanner>
-invokevirtual java/util/Scanner/close()V
 >>
 
 
-read_bool(lvalue, scanner) ::= <<
-new java/util/Scanner
-dup
-getstatic java/lang/System/in Ljava/io/InputStream;
-invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore <scanner>
-aload <scanner>
+read_bool(lvalue, prefix, filename) ::= <<
+getstatic output/<prefix><filename>/scan Ljava/util/Scanner;
 invokevirtual java/util/Scanner/nextBoolean()Z
 istore <lvalue>
-aload <scanner>
-invokevirtual java/util/Scanner/close()V
 >>
 
 
-read_char(lvalue, scanner) ::= <<
-new java/util/Scanner
-dup
-getstatic java/lang/System/in Ljava/io/InputStream;
-invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore <scanner>
-aload <scanner>
+read_char(lvalue, prefix, filename) ::= <<
+getstatic output/<prefix><filename>/scan Ljava/util/Scanner;
 invokevirtual java/util/Scanner/next()Ljava/lang/String;
 iconst_0
 invokevirtual java/lang/String/charAt(I)C
 istore <lvalue>
-aload <scanner>
-invokevirtual java/util/Scanner/close()V
 >>
 
 return(exps, size, size_label) ::= <<

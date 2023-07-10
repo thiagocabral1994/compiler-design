@@ -1,9 +1,11 @@
 group java;
 
-program(name, datas, functions, prefix) ::= <<
+program(name, datas, functions, prefix, scanner) ::= <<
 package output;
 
 public class <prefix><name> {
+    <scanner>
+
     <datas; separator="\n\n">
 
     <functions; separator="\n\n">
@@ -12,6 +14,10 @@ public class <prefix><name> {
         <prefix>main();
     }
 }
+>>
+
+scanner() ::= <<
+static final java.util.Scanner scan = new java.util.Scanner(System.in);
 >>
 
 data(name, declarations, prefix) ::= <<
@@ -38,28 +44,20 @@ custom_type(name, prefix) ::= "<prefix><name>"
 
 print(exp) ::= "System.out.print(<exp>);"
 
-read_int(lvalue, scanner) ::= <<
-java.util.Scanner <scanner> = new java.util.Scanner(System.in);
-<lvalue> = <scanner>.nextInt();
-<scanner>.close();
+read_int(lvalue) ::= <<
+<lvalue> = scan.nextInt();
 >>
 
-read_float(lvalue, scanner) ::= <<
-java.util.Scanner <scanner> = new java.util.Scanner(System.in);
-<lvalue> = <scanner>.nextFloat();
-<scanner>.close();
+read_float(lvalue) ::= <<
+<lvalue> = scan.nextFloat();
 >>
 
-read_bool(lvalue, scanner) ::= <<
-java.util.Scanner <scanner> = new java.util.Scanner(System.in);
-<lvalue> = <scanner>.nextBoolean();
-<scanner>.close();
+read_bool(lvalue) ::= <<
+<lvalue> = scan.nextBoolean();
 >>
 
-read_char(lvalue, scanner) ::= <<
-java.util.Scanner <scanner> = new java.util.Scanner(System.in);
-<lvalue> = <scanner>.next().charAt(0);
-<scanner>.close();
+read_char(lvalue) ::= <<
+<lvalue> = scan.next().charAt(0);
 >>
 
 return(exps, size, rv_count) ::= <<
