@@ -139,7 +139,7 @@ invokevirtual java/util/Scanner/close()V
 >>
 
 return(exps, size, size_label) ::= <<
-iconst_<size>
+sipush <size>
 anewarray java/lang/Object
 astore <size_label> 
 
@@ -151,7 +151,7 @@ areturn
 
 return_attr(size_label, index, exp, return_attr_type) ::= <<
 aload <size_label>
-iconst_<index>
+sipush <index>
 <exp>
 <return_attr_type>
 aastore
@@ -239,6 +239,13 @@ assignment_attribute(exp, lvalue, type, prefix, name, return_type) ::= <<
 putfield <type>/<prefix><name> <return_type>
 >>
 
+assignment_array_index(exp, lvalue, index_exp, store) ::= <<
+<lvalue>
+<index_exp>
+<exp>
+<store>
+>>
+
 lvalue_int(label) ::= <<
 iload_<label>
 >>
@@ -263,16 +270,10 @@ lvalue_array(label) ::= <<
 aload <label>
 >>
 
-array_lvalue(index, offset_array_lvalue) ::= <<
-iconst_<index>
-aaload
-
-<offset_array_lvalue; separator="\n\n">
->>
-
-offset_array_lvalue(index) ::= <<
-aaload
-iconst_<index>
+array_lvalue(lvalue, exp, load) ::= <<
+<lvalue>
+<exp>
+<load>
 >>
 
 object_lvalue(lvalue, type, prefix, name, return_type) ::= <<
@@ -287,9 +288,29 @@ null_exp() ::= "aconst_null"
 true_exp() ::= "iconst_1"
 false_exp() ::= "iconst_0"
 
-new_array(size, offset, type) ::= <<
-iconst_<size>
+new_array(size, call) ::= <<
+sipush <size>
+<call>
+>>
+
+new_array_custom(offset, type) ::= <<
 anewarray <offset: {o | [}><type>
+>>
+
+new_array_int() ::= <<
+newarray int
+>>
+
+new_array_float() ::= <<
+newarray float
+>>
+
+new_array_bool() ::= <<
+newarray bool
+>>
+
+new_array_char() ::= <<
+newarray char
 >>
 
 new_object(type) ::= <<
@@ -329,7 +350,7 @@ astore <return_size>
 call_return_attr(return_size, store, index, cast, return_label) ::= <<
 ; Atribuição do retorno da função
 aload <return_size>
-iconst_<index>
+sipush <index>
 aaload
 <cast>
 <store>_<return_label>
@@ -343,7 +364,7 @@ call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= 
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)<return_type>
 
 ; Atribuição do retorno da função
-iconst_<exp>
+sipush <exp>
 aaload
 <cast>
 >>
@@ -472,7 +493,6 @@ goto #label_eq<num>#<num>
 iconst_0
 #label_eq<num>#<num>:
 >>
-
 
 not_equals_exp(num, left_exp, convertL, right_exp, convertR) ::= <<
 <left_exp>

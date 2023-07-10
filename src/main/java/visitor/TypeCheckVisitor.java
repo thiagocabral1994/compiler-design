@@ -710,7 +710,10 @@ public class TypeCheckVisitor extends Visitor {
     this.printCheck = true;
     cmd.getExpression().accept(this);
     this.printCheck = false;
-    this.stack.pop();
+    if (this.stack.pop().match(typeNull)) {
+      this.logError.add(cmd.getLine() + ", " + cmd.getCol() + " Não pode printar valor null");
+      this.stack.push(this.typeError);
+    }
   }
 
   @Override

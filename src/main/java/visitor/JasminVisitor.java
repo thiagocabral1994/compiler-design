@@ -120,14 +120,21 @@ public class JasminVisitor extends Visitor {
 	public void visit(ArrayLValue lvalueArray) {
 		ST arrayLValueTemplate = groupTemplate.getInstanceOf("array_lvalue");
 		lvalueArray.getLValue().accept(this);
-
-		STypeArray parentType = (STypeArray) this.lvalueTypeStack.pop();
 		arrayLValueTemplate.add("lvalue", this.expressionTemplateStack.pop());
 		lvalueArray.getExpression().accept(this);
 		arrayLValueTemplate.add("exp", this.expressionTemplateStack.pop());
-
+		if (lvalueArray.getSemanticType() instanceof STypeInt) {
+			arrayLValueTemplate.add("load", "iaload");
+		} else if (lvalueArray.getSemanticType() instanceof STypeFloat) {
+			arrayLValueTemplate.add("load", "faload");
+		} else if (lvalueArray.getSemanticType() instanceof STypeChar) {
+			arrayLValueTemplate.add("load", "iaload");
+		} else if (lvalueArray.getSemanticType() instanceof STypeBool) {
+			arrayLValueTemplate.add("load", "iaload");
+		} else {
+			arrayLValueTemplate.add("load", "aaload");
+		}
 		this.expressionTemplateStack.push(arrayLValueTemplate);
-		this.lvalueTypeStack.push(parentType.getType());
 	}
 
 	@Override
@@ -156,6 +163,24 @@ public class JasminVisitor extends Visitor {
 			String typeString = this.typeTemplate.render();
 			localCommandTemplate.add("type", typeString.substring(1, typeString.length() - 1));
 			localCommandTemplate.add("lvalue", this.expressionTemplateStack.pop());
+		} else if (lvalue instanceof ArrayLValue) {
+			ArrayLValue arrayLValue = (ArrayLValue) lvalue;
+			arrayLValue.getLValue().accept(this);
+			localCommandTemplate = this.groupTemplate.getInstanceOf("assignment_array_index");
+			localCommandTemplate.add("lvalue", this.expressionTemplateStack.pop());
+			arrayLValue.getExpression().accept(this);
+			localCommandTemplate.add("index_exp", this.expressionTemplateStack.pop());
+			if (lvalue.getSemanticType() instanceof STypeInt) {
+				localCommandTemplate.add("store", "iastore");
+			} else if (lvalue.getSemanticType() instanceof STypeFloat) {
+				localCommandTemplate.add("store", "fastore");
+			} else if (lvalue.getSemanticType() instanceof STypeChar) {
+				localCommandTemplate.add("store", "iastore");
+			} else if (lvalue.getSemanticType() instanceof STypeBool) {
+				localCommandTemplate.add("store", "iastore");
+			} else {
+				localCommandTemplate.add("store", "aastore");
+			}
 		} else {
 			lvalue.accept(this);
 			String attrRef;
@@ -209,7 +234,8 @@ public class JasminVisitor extends Visitor {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_return");
 			List<ST> callAssigments = new ArrayList<ST>();
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
-				Pair<SemanticType, Integer> pair = this.localEnv.get(cmd.getReturnLValueContexts().get(i).getLValue().getHeadId());
+				Pair<SemanticType, Integer> pair = this.localEnv
+						.get(cmd.getReturnLValueContexts().get(i).getLValue().getHeadId());
 				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_attr");
 				callAssigment.add("return_size", cmd.getLabel());
 				callAssigment.add("index", i);
@@ -673,25 +699,34 @@ public class JasminVisitor extends Visitor {
 			type = arrayType.getType();
 		}
 
+		type.accept(this);
+
 		ST expressionTemplate;
-		if (offset > 0) {
+		if (exp.getExpression() != null) {
 			expressionTemplate = groupTemplate.getInstanceOf("new_array");
-			expressionTemplate.add("offset", new int[offset]);
+			expressionTemplate.add("size", exp.getIndex());
+			ST auxTemplate = null;
+			if (offset > 0) {
+				auxTemplate = groupTemplate.getInstanceOf("new_array_custom");
+				String typeString = this.typeTemplate.render();
+				typeString = offset > 0 ? typeString : typeString.substring(1, typeString.length() - 1);
+				auxTemplate.add("offset", new int[offset]);
+				auxTemplate.add("type", typeString);
+			} else if (type.getTypeName().equals("Int")) {
+				auxTemplate = groupTemplate.getInstanceOf("new_array_int");
+			} else if (type.getTypeName().equals("Float")) {
+				auxTemplate = groupTemplate.getInstanceOf("new_array_float");
+			} else if (type.getTypeName().equals("Bool")) {
+				auxTemplate = groupTemplate.getInstanceOf("new_array_bool");
+			} else if (type.getTypeName().equals("Char")) {
+				auxTemplate = groupTemplate.getInstanceOf("new_array_char");
+			}
+			expressionTemplate.add("call", auxTemplate);
 		} else {
 			expressionTemplate = groupTemplate.getInstanceOf("new_object");
-		}
-
-		type.accept(this);
-		String typeString = this.typeTemplate.render();
-		if (exp.getSemanticType() instanceof STypeCustom) {
-			// Remove os caracteres indesejados de uma custom variable;
+			String typeString = this.typeTemplate.render();
 			typeString = typeString.substring(1, typeString.length() - 1);
-		}
-
-		expressionTemplate.add("type", typeString);
-
-		if (exp.getExpression() != null) {
-			expressionTemplate.add("size", exp.getIndex());
+			expressionTemplate.add("type", typeString);
 		}
 
 		this.expressionTemplateStack.push(expressionTemplate);
