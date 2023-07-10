@@ -320,27 +320,21 @@ invokespecial <type>/\<init>()V
 >>
 
 call_void(args, prefix, filename, name, param_types) ::= <<
-; Carregando os argumentos do método
 <args; separator="\n">
 
-; Invocação estática do método
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)V
 >>
 
 call_void_return_pop(args, prefix, filename, name, param_types) ::= <<
-; Carregando os argumentos do método
 <args; separator="\n">
 
-; Invocação estática do método
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
 pop
 >>
 
 call_return(args, prefix, filename, name, param_types, return_size, return_attr) ::= <<
-; Carregando os argumentos do método
 <args; separator="\n">
 
-; Invocação estática do método
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
 astore <return_size>
 
@@ -348,7 +342,6 @@ astore <return_size>
 >>
 
 call_return_attr(return_size, store, index, cast, return_label) ::= <<
-; Atribuição do retorno da função
 aload <return_size>
 sipush <index>
 aaload
@@ -357,13 +350,10 @@ aaload
 >>
 
 call_exp(args, prefix, filename, name, param_types, return_type, exp, cast) ::= <<
-; Carregando os argumentos do método
 <args; separator="\n">
 
-; Invocação estática do método
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)<return_type>
 
-; Atribuição do retorno da função
 sipush <exp>
 aaload
 <cast>
