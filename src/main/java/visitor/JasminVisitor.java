@@ -209,6 +209,7 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(CallCommand cmd) {
+		this.localSize++;
 		ST cmdTemplate;
 		List<ST> localParamTemplates = new ArrayList<>();
 		List<SemanticType> paramTypes = new ArrayList<>();
@@ -436,7 +437,6 @@ public class JasminVisitor extends Visitor {
 		STypeFunctionKey functionKey = STypeFunctionKey.create(function.getId(), function.getFunctionType().getParams());
 		this.localEnv = this.env.get(functionKey);
 		this.localSize = this.localEnv.getKeys().size();
-		functionTemplate.add("stack", 100/* this.localEnv.getMaxStackSize() */); // TODO
 
 		List<ST> paramTemplates = new ArrayList<ST>();
 		for (Parameter param : function.getParameters()) {
@@ -454,7 +454,8 @@ public class JasminVisitor extends Visitor {
 		}
 		functionTemplate.add("commands", this.commandTemplates);
 
-		functionTemplate.add("locals", 100 /* this.localSize */); // TODO
+		functionTemplate.add("stack", 100/* this.localEnv.getMaxStackSize() */); // TODO
+		functionTemplate.add("locals", this.localSize);
 		this.functionTemplates.add(functionTemplate);
 	}
 
@@ -552,6 +553,7 @@ public class JasminVisitor extends Visitor {
 	@Override
 	public void visit(IterateCommand command) {
 		this.iteratorCount++;
+		this.localSize++;
 		ST localCommandTemplate = groupTemplate.getInstanceOf("iterate");
 		localCommandTemplate.add("label_i", command.getLabel());
 		localCommandTemplate.add("label_iterator", this.iteratorCount);
@@ -817,6 +819,7 @@ public class JasminVisitor extends Visitor {
 
 	@Override
 	public void visit(ReturnCommand cmd) {
+		this.localSize++;
 		ST localCommandTemplate = groupTemplate.getInstanceOf("return");
 		localCommandTemplate.add("size_label", cmd.getLabel());
 		this.localSize++;
