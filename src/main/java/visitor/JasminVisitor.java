@@ -697,13 +697,19 @@ public class JasminVisitor extends Visitor {
 		ST expressionTemplate;
 		if (exp.getExpression() != null) {
 			expressionTemplate = groupTemplate.getInstanceOf("new_array");
-			expressionTemplate.add("size", exp.getIndex());
+			exp.getExpression().accept(this);
+			expressionTemplate.add("exp", this.expressionTemplateStack.pop());
 			ST auxTemplate = null;
-			if (offset > 0) {
+			STypeArray arraySType = (STypeArray) exp.getSemanticType();
+			SemanticType refType = arraySType.getType();
+			if (refType instanceof STypeCustom || refType instanceof STypeArray) {
 				auxTemplate = groupTemplate.getInstanceOf("new_array_custom");
 				String typeString = this.typeTemplate.render();
-				typeString = offset > 0 ? typeString : typeString.substring(1, typeString.length() - 1);
-				auxTemplate.add("offset", new int[offset]);
+				if (offset > 0) {
+					auxTemplate.add("offset", new int[offset]);
+				} else if (sType instanceof STypeCustom) {
+					typeString = typeString.substring(1, typeString.length() - 1);
+				}
 				auxTemplate.add("type", typeString);
 			} else if (type.getTypeName().equals("Int")) {
 				auxTemplate = groupTemplate.getInstanceOf("new_array_int");

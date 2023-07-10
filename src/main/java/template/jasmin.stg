@@ -288,8 +288,8 @@ null_exp() ::= "aconst_null"
 true_exp() ::= "iconst_1"
 false_exp() ::= "iconst_0"
 
-new_array(size, call) ::= <<
-sipush <size>
+new_array(exp, call) ::= <<
+<exp>
 <call>
 >>
 
