@@ -916,33 +916,20 @@ public class JasminVisitor extends Visitor {
 	}
 
 	private Boolean isLeftSideInt(RExpression exp) {
-
-		SemanticType lType;
-
-		if (!this.lvaluePairStack.empty()) {
-			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-			lType = pairL.getLeft();
-
-		} else {
-			lType = exp.getSemanticType();
-		}
-
-		return ((lType instanceof STypeInt) || (lType instanceof STypeChar));
+		return this.isRightSideInt(exp);
 	}
 
 	private Boolean isRightSideInt(RExpression exp) {
+		SemanticType sType;
 
-		SemanticType lType;
-
-		if (!this.lvaluePairStack.empty()) {
-			Pair<SemanticType, Integer> pairL = this.lvaluePairStack.pop();
-			lType = pairL.getLeft();
-
+		if (exp instanceof LValue && !this.lvaluePairStack.empty()) {
+			Pair<SemanticType, Integer> pair = this.lvaluePairStack.pop();
+			sType = pair.getLeft();
 		} else {
-			lType = exp.getSemanticType();
+			sType = exp.getSemanticType();
 		}
 
-		return ((lType instanceof STypeInt) || (lType instanceof STypeChar));
+		return ((sType instanceof STypeInt) || (sType instanceof STypeChar));
 	}
 
 }
