@@ -22,7 +22,7 @@ data(filename, name, fields, prefix) ::= <<
     .method \<init>()V
         .limit stack 1
         .limit locals 1
-        aload_0
+        aload 0
         invokespecial java/lang/Object/\<init>()V
         return
     .end method
@@ -86,11 +86,11 @@ new java/util/Scanner
 dup
 getstatic java/lang/System/in Ljava/io/InputStream;
 invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore_<scanner>
-aload_<scanner>
+astore <scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/nextInt()I
 istore_<lvalue>
-aload_<scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
 
@@ -100,11 +100,11 @@ new java/util/Scanner
 dup
 getstatic java/lang/System/in Ljava/io/InputStream;
 invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore_<scanner>
-aload_<scanner>
+astore <scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/nextFloat()F
 fstore_<lvalue>
-aload_<scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
 
@@ -114,11 +114,11 @@ new java/util/Scanner
 dup
 getstatic java/lang/System/in Ljava/io/InputStream;
 invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore_<scanner>
-aload_<scanner>
+astore <scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/nextBoolean()Z
 istore_<lvalue>
-aload_<scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
 
@@ -128,13 +128,13 @@ new java/util/Scanner
 dup
 getstatic java/lang/System/in Ljava/io/InputStream;
 invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
-astore_<scanner>
-aload_<scanner>
+astore <scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/next()Ljava/lang/String;
 iconst_0
 invokevirtual java/lang/String/charAt(I)C
 istore_<lvalue>
-aload_<scanner>
+aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
 
@@ -225,12 +225,12 @@ istore_<lvalue>
 
 assignment_array(lvalue, exp) ::= <<
 <exp>
-astore_<lvalue>
+astore <lvalue>
 >>
 
 assignment_custom(lvalue, exp) ::= <<
 <exp>
-astore_<lvalue>
+astore <lvalue>
 >>
 
 assignment_attribute(exp, type, prefix, name, return_type) ::= <<
@@ -255,11 +255,11 @@ iload_<label>
 >>
 
 lvalue_custom(label) ::= <<
-aload_<label>
+aload <label>
 >>
 
 lvalue_array(label) ::= <<
-aload_<label>
+aload <label>
 >>
 
 array_lvalue(index, offset_array_lvalue) ::= <<
@@ -320,14 +320,14 @@ call_return(args, prefix, filename, name, param_types, return_size, return_attr)
 
 ; Invocação estática do método
 invokestatic output/<prefix><filename>/<prefix><name>(<param_types>)[Ljava/lang/Object;
-astore_<return_size>
+astore <return_size>
 
 <return_attr; separator="\n\n">
 >>
 
 call_return_attr(return_size, store, index, cast, return_label) ::= <<
 ; Atribuição do retorno da função
-aload_<return_size>
+aload <return_size>
 iconst_<index>
 aaload
 <cast>
