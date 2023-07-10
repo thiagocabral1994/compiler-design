@@ -215,7 +215,7 @@ public class JavaVisitor extends Visitor {
 
 	@Override
 	public void visit(CustomBasicType type) {
-		this.sType = STypeChar.create();
+		this.sType = STypeCustom.create(type.getTypeName());
 		processSemanticType(this.sType);
 	}
 
