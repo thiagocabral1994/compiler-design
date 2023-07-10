@@ -382,7 +382,7 @@ public class JavaVisitor extends Visitor {
 		command.getCommand().accept(this);
 		localCommandTemplate.add("thn", this.commandTemplate);
 		this.commandTemplate = localCommandTemplate;
-		this.iteratorCount--;
+
 	}
 
 	@Override

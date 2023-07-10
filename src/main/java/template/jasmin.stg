@@ -89,7 +89,7 @@ invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
 astore <scanner>
 aload <scanner>
 invokevirtual java/util/Scanner/nextInt()I
-istore_<lvalue>
+istore <lvalue>
 aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
@@ -117,7 +117,7 @@ invokespecial java/util/Scanner/\<init>(Ljava/io/InputStream;)V
 astore <scanner>
 aload <scanner>
 invokevirtual java/util/Scanner/nextBoolean()Z
-istore_<lvalue>
+istore <lvalue>
 aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
@@ -133,7 +133,7 @@ aload <scanner>
 invokevirtual java/util/Scanner/next()Ljava/lang/String;
 iconst_0
 invokevirtual java/lang/String/charAt(I)C
-istore_<lvalue>
+istore <lvalue>
 aload <scanner>
 invokevirtual java/util/Scanner/close()V
 >>
@@ -190,10 +190,10 @@ nop
 
 iterate(exp, thn, label_iterator, label_i) ::= <<
 <exp>
-istore_<label_i>
+istore <label_i>
 
 #start<label_iterator>:
-iload_<label_i>
+iload <label_i>
 iconst_0
 if_icmple #end<label_iterator>
 <thn>
@@ -205,7 +205,7 @@ goto #start<label_iterator>
 
 assignment_int(lvalue, exp) ::= <<
 <exp>
-istore_<lvalue>
+istore <lvalue>
 >>
 
 assignment_float(lvalue, exp) ::= <<
@@ -215,12 +215,12 @@ fstore_<lvalue>
 
 assignment_char(lvalue, exp) ::= <<
 <exp>
-istore_<lvalue>
+istore <lvalue>
 >>
 
 assignment_bool(lvalue, exp) ::= <<
 <exp>
-istore_<lvalue>
+istore <lvalue>
 >>
 
 assignment_array(lvalue, exp) ::= <<
@@ -247,7 +247,7 @@ assignment_array_index(exp, lvalue, index_exp, store) ::= <<
 >>
 
 lvalue_int(label) ::= <<
-iload_<label>
+iload <label>
 >>
 
 lvalue_float(label) ::= <<
@@ -255,11 +255,11 @@ fload_<label>
 >>
 
 lvalue_bool(label) ::= <<
-iload_<label>
+iload <label>
 >>
 
 lvalue_char(label) ::= <<
-iload_<label>
+iload <label>
 >>
 
 lvalue_custom(label) ::= <<
