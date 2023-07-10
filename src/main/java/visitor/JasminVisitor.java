@@ -24,12 +24,9 @@ public class JasminVisitor extends Visitor {
 	private Stack<ST> expressionTemplateStack;
 	private int iteratorCount = 0;
 	private int ifCount = 0;
-	private int returnCount = 0;
 	private int lessCount = 0;
 	private int eqCount = 0;
 	private int notEqCount = 0;
-	private int lastIndex;
-	private int scannerCount = 0;
 	private LocalEnv<Pair<SemanticType, Integer>> localEnv;
 	private int localSize;
 	private Stack<Pair<SemanticType, Integer>> lvaluePairStack;
@@ -37,8 +34,6 @@ public class JasminVisitor extends Visitor {
 	private String fileName;
 
 	private Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env;
-	private Map<String, Map<String, SemanticType>> dataMap;
-	private Stack<SemanticType> lvalueTypeStack;
 
 	public JasminVisitor(String fileName, Map<STypeFunctionKey, LocalEnv<Pair<SemanticType, Integer>>> env,
 			Map<String, Map<String, SemanticType>> map) {
@@ -47,8 +42,6 @@ public class JasminVisitor extends Visitor {
 		this.fileName = fileName;
 		this.env = env;
 		this.expressionTemplateStack = new Stack<ST>();
-		this.dataMap = map;
-		this.lvalueTypeStack = new Stack<SemanticType>();
 		this.lvaluePairStack = new Stack<>();
 	}
 
