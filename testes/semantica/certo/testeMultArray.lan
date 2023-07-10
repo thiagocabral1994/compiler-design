@@ -1,0 +1,14 @@
+data Ponto {
+   x :: Int[][][][];
+   y :: Int;
+}
+
+main(){
+   x = 2;
+   ponto = new Int[][][][300];
+   ponto[x] = new Int[][][99];
+   ponto[x][1] = new Int[][100];
+   ponto[x][1][2] = new Int[100];
+   ponto[x][1][2][3] = 300;
+   print ponto[x][1][2][3];
+}
