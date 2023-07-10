@@ -189,15 +189,15 @@ nop
 >>
 
 iterate(exp, thn, label_iterator, label_i) ::= <<
-iconst_0
+<exp>
 istore_<label_i>
 
 #start<label_iterator>:
 iload_<label_i>
-<exp>
-if_icmpge #end<label_iterator>
+iconst_0
+if_icmple #end<label_iterator>
 <thn>
-iinc <label_i> 1
+iinc <label_i> -1
 goto #start<label_iterator>
 
 #end<label_iterator>:
