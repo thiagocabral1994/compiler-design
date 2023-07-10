@@ -155,6 +155,7 @@ public class JasminVisitor extends Visitor {
 			processSemanticType(type);
 			String typeString = this.typeTemplate.render();
 			localCommandTemplate.add("type", typeString.substring(1, typeString.length() - 1));
+			localCommandTemplate.add("lvalue", this.expressionTemplateStack.pop());
 		} else {
 			lvalue.accept(this);
 			String attrRef;

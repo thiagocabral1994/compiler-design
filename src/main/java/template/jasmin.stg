@@ -233,7 +233,8 @@ assignment_custom(lvalue, exp) ::= <<
 astore <lvalue>
 >>
 
-assignment_attribute(exp, type, prefix, name, return_type) ::= <<
+assignment_attribute(exp, lvalue, type, prefix, name, return_type) ::= <<
+<lvalue>
 <exp>
 putfield <type>/<prefix><name> <return_type>
 >>
