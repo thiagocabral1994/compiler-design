@@ -266,12 +266,14 @@ public class TypeCheckVisitor extends Visitor {
     String id = exp.getID();
 
     List<SemanticType> argTypes = new ArrayList<>();
+    this.maxStackOffset++;
     for (int i = 0; i < exp.getParamExpressions().size(); i++) {
       exp.getParamExpressions().get(i).accept(this);
       this.testMaxSize();
       SemanticType expressionType = this.stack.pop();
       argTypes.add(expressionType);
     }
+    this.maxStackOffset--;
 
     STypeFunctionKey functionKey = STypeFunctionKey.create(id, argTypes);
     LocalEnv<Pair<SemanticType, Integer>> localEnv = env.get(functionKey);
@@ -283,8 +285,10 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
 
+    this.maxStackOffset++;
     exp.getBracketExpression().accept(this);
     this.testMaxSize();
+    this.maxStackOffset--;
 
     STypeFunction typeFunction = localEnv.getFunctionType();
     if (this.stack.pop().match(typeInt)) {
@@ -357,9 +361,11 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(EqualityRExpression exp) {
+    this.maxStackOffset+=2;
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
     this.testMaxSize();
+    this.maxStackOffset-=2;
     SemanticType left, right;
     right = this.stack.pop();
     left = this.stack.pop();
@@ -423,7 +429,8 @@ public class TypeCheckVisitor extends Visitor {
       this.logError.add(function.getLine() + ", " + function.getCol() + ": Função " + function.getId()
           + " deve retornar algum valor.");
     }
-
+    
+    System.out.println("Função " + function.getId() + " stack max " + this.activeScope.getMaxStackSize());
   }
 
   @Override
@@ -486,8 +493,10 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(InequalityRExpression exp) {
+    this.maxStackOffset+=2;
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.maxStackOffset-=2;
     this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
@@ -534,8 +543,10 @@ public class TypeCheckVisitor extends Visitor {
 
   @Override
   public void visit(LessRExpression exp) {
+    this.maxStackOffset+=2;
     exp.getLeft().accept(this);
     exp.getRight().accept(this);
+    this.maxStackOffset-=2;
     this.testMaxSize();
     SemanticType left, right;
     right = this.stack.pop();
@@ -807,6 +818,7 @@ public class TypeCheckVisitor extends Visitor {
       return;
     }
 
+    this.maxStackOffset++;
     List<SemanticType> argTypes = funcType.getReturnTypes();
     for (int i = 0; i < returnExpressions.size(); i++) {
       returnExpressions.get(i).accept(this);
@@ -817,6 +829,7 @@ public class TypeCheckVisitor extends Visitor {
             + argTypes.get(i).toString() + " mas recebeu " + expressionType);
       }
     }
+    this.maxStackOffset--;
   }
 
   @Override
