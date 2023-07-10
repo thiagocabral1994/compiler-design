@@ -9,6 +9,7 @@ public class CallCommand extends Command implements Visitable {
   private String id;
   private List<Expression> expressions;
   private List<LValueContext> returnLValues;
+  private int label;
 
   public CallCommand(int line, int col, String id, List<Expression> exps, List<LValueContext> lvalues) {
     super(line, col);
@@ -20,6 +21,8 @@ public class CallCommand extends Command implements Visitable {
   public String getId() { return this.id; }
   public List<Expression> getExpressions() { return this.expressions; }
   public List<LValueContext> getReturnLValueContexts() { return this.returnLValues; }
+  public int getLabel() { return this.label;}
+  public void setLabel(int label) { this.label = label;}
 
   public void accept(Visitor visitor) {
     visitor.visit(this);

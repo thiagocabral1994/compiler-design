@@ -195,9 +195,9 @@ public class JasminVisitor extends Visitor {
 			for (int i = 0; i < cmd.getReturnLValueContexts().size(); i++) {
 				Pair<SemanticType, Integer> pair = this.localEnv.get(cmd.getReturnLValueContexts().get(i).getLValue().getHeadId());
 				ST callAssigment = this.groupTemplate.getInstanceOf("call_return_attr");
-				callAssigment.add("return_size", cmd.getReturnLValueContexts().size());
+				callAssigment.add("return_size", cmd.getLabel());
 				callAssigment.add("index", i);
-				callAssigment.add("return_label", pair.getRight()+1);
+				callAssigment.add("return_label", pair.getRight());
 				SemanticType returnType = sTyFunc.getReturnTypes().get(i);
 				String templateRef;
 				if (returnType instanceof STypeInt) {
@@ -219,7 +219,7 @@ public class JasminVisitor extends Visitor {
 				callAssigment.add("cast", printTemplate);
 				callAssigments.add(callAssigment);
 			}
-			cmdTemplate.add("return_size", cmd.getReturnLValueContexts().size());
+			cmdTemplate.add("return_size", cmd.getLabel());
 			cmdTemplate.add("return_attr", callAssigments);
 		} else if (sTyFunc.getReturnTypes().size() > 0) {
 			cmdTemplate = this.groupTemplate.getInstanceOf("call_void_return_pop");

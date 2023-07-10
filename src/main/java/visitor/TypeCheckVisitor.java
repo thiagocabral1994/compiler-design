@@ -257,6 +257,7 @@ public class TypeCheckVisitor extends Visitor {
                 + " a " + lValueType.toString());
       }
     }
+    cmd.setLabel(intCount++);
   }
 
   @Override
