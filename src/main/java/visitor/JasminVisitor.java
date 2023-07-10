@@ -774,9 +774,7 @@ public class JasminVisitor extends Visitor {
 
 		ST readTemplate = groupTemplate.getInstanceOf(templateRef);
 
-		ST lvalueLabelTemplate = this.groupTemplate.getInstanceOf("lvalue_label");
-		lvalueLabelTemplate.add("label", pair.getRight());
-		readTemplate.add("lvalue", lvalueLabelTemplate);
+		readTemplate.add("lvalue", pair.getRight());
 		readTemplate.add("scanner", cmd.getLabel());
 		this.localSize++;
 		this.commandTemplate = readTemplate;
